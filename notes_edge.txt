@@ -1,0 +1,258 @@
+--- Slide 1 ---
+Anno Accademico 2024/2025.
+    Questo corso è dedicato all'Edge Computing per l'IoT, un tema fondamentale per comprendere l'evoluzione verso un Intelligent Internet of Things.
+
+Affronteremo i principi e le applicazioni dell'Edge Computing nel contesto dell'Internet of Things.
+    L'Internet of Things (IoT) si riferisce a quella rete in continua espansione di dispositivi fisici, sensori e attuatori connessi a internet.
+        Questi dispositivi, che siano nelle nostre case, nelle fabbriche, o nelle città intelligenti, generano costantemente una mole enorme di dati.
+
+Tradizionalmente, la maggior parte di questi dati verrebbe inviata a un data center centrale, il cosiddetto "cloud", per l'elaborazione e l'analisi.
+    L'Edge Computing propone un paradigma diverso.
+        Sposta le capacità di calcolo e di archiviazione dei dati più vicino alla "sorgente" dove i dati vengono generati, ovvero ai margini della rete – l'“edge”.
+
+Vediamo perché l'Edge Computing è così cruciale per un IoT "Intelligente":
+    -   Latenza ridotta: L'elaborazione locale riduce drasticamente il tempo che intercorre tra la raccolta del dato e la sua analisi o l'azione conseguente.
+            Questo è vitale per applicazioni in tempo reale, come la guida autonoma, i sistemi di sicurezza industriali o la chirurgia assistita.
+    -   Efficienza della banda: Non tutti i dati grezzi necessitano di essere trasmessi al cloud.
+            L'Edge Computing permette di filtrare, aggregare e pre-elaborare i dati localmente, inviando al cloud solo le informazioni essenziali o i risultati dell'analisi.
+            Ciò riduce i costi di trasmissione e l'ingombro della rete.
+    -   Maggiore sicurezza e privacy: Mantenere e processare i dati sensibili più vicini alla fonte, e talvolta persino sul dispositivo stesso, riduce i punti di esposizione durante il transito e può facilitare la conformità alle normative sulla privacy dei dati.
+    -   Operatività offline/autonoma: I dispositivi edge possono continuare a funzionare e a prendere decisioni anche in assenza di una connessione stabile con il cloud centrale.
+            Questo aumenta l'affidabilità e la resilienza dei sistemi IoT.
+
+Il concetto di Intelligent Internet of Things nasce proprio dall'integrazione di queste capacità di elaborazione all'edge con l'intelligenza artificiale e il machine learning.
+    Permette ai dispositivi di apprendere dal loro ambiente, adattarsi e agire in modo più autonomo e proattivo, trasformando semplici sensori in componenti attivi e decisionali della rete.
+
+--- Slide 2 ---
+Edge Computing per l'Internet of Things
+
+    Questo modulo formativo si concentra sull'Edge Computing, analizzando la sua importanza crescente nell'ecosistema dell'Internet of Things.
+
+    Cloud Computing & Internet of Things
+        Inizieremo esaminando la relazione consolidata tra Cloud Computing e Internet of Things.
+        Tradizionalmente, i dispositivi IoT si affidano in larga misura a infrastrutture cloud remote per l'elaborazione, l'archiviazione massiva e la gestione centralizzata dei dati.
+        Discuteremo i vantaggi intrinseci di questo modello, quali la scalabilità quasi illimitata, la potenza di calcolo disponibile e la facilità di accesso globale ai servizi.
+
+    The Cloud “Addiction” Problem (Il Problema della “Dipendenza” dal Cloud)
+        Successivamente, affronteremo le problematiche emergenti da una dipendenza esclusiva o eccessiva dal cloud per tutte le operazioni IoT.
+        Esamineremo fattori critici come l'elevata latenza (il tempo di risposta tra dispositivo e cloud), i costi operativi associati al traffico di rete e allo stoccaggio dati (costi di banda e storage), le implicazioni per la sicurezza e la privacy dei dati in transito, e le vulnerabilità legate alla connettività di rete (resilienza del sistema).
+        Queste sfide possono seriamente compromettere l'efficienza e la sostenibilità economica delle soluzioni IoT, in particolare per scenari che richiedono reattività in tempo reale o operatività in ambienti con connettività limitata.
+
+    Edge/Fog Computing Vision (La Visione dell'Edge/Fog Computing)
+        Introdurremo quindi la visione strategica dell'Edge Computing e del Fog Computing.
+        Spiegheremo come queste architetture mirino a spostare l'elaborazione dei dati, l'analisi e la logica applicativa più vicino alla sorgente dei dati stessi, ovvero ai dispositivi IoT o a nodi computazionali locali (gateway, server edge).
+        L'obiettivo principale è mitigare i problemi del cloud, migliorando la reattività, riducendo l'utilizzo della banda, incrementando la sicurezza dei dati e consentendo un'elaborazione più efficiente in loco.
+
+    Distributed IoT Applications (Applicazioni IoT Distribuite)
+        Approfondiremo il concetto di Applicazioni IoT Distribuite, un paradigma abilitato dall'Edge Computing.
+        Illustreremo come sia possibile progettare e implementare soluzioni IoT le cui funzionalità non sono monoliticamente residenti nel cloud, ma sono intelligentemente ripartite tra i nodi edge e l'infrastruttura cloud.
+        Questa distribuzione permette di ottimizzare le prestazioni, garantire operazioni autonome e resilienti, e gestire in modo più efficiente le risorse computazionali e di rete.
+
+    IoT Hub & Gateways (Edge) (Hub IoT e Gateway all'Edge)
+        Esamineremo i componenti hardware e software fondamentali che costituiscono l'infrastruttura Edge, focalizzandoci sugli IoT Hub e sui Gateway.
+        Descriveremo il loro ruolo critico nella connessione sicura di un'ampia varietà di dispositivi IoT, nel pre-elaborazione, nel filtraggio e nell'aggregazione dei dati a livello locale.
+        Questi dispositivi fungono da punti di raccolta e da centri di elaborazione primaria, capaci di eseguire logiche applicative e di prendere decisioni autonome senza dipendere costantemente dalla connettività cloud.
+
+    IoT Hub -> Cloud & Edge Synchronization (Sincronizzazione tra IoT Hub e Cloud)
+        Infine, affronteremo le sfide e le soluzioni relative alla Sincronizzazione tra gli IoT Hub operanti all'edge e i servizi cloud centrali.
+        Discuteremo le strategie per garantire la coerenza dei dati e la continuità operativa in un'architettura ibrida dove parte delle elaborazioni e dell'archiviazione avviene localmente e parte nel cloud.
+        Verranno esplorati modelli di comunicazione bidirezionale, meccanismi di gestione dei conflitti e tecniche per assicurare che i dati siano sempre aggiornati e allineati attraverso tutti i livelli del sistema distribuito, massimizzando l'efficacia dell'integrazione tra edge e cloud.
+
+--- Slide 3 ---
+2024 - Marco Picone, Ph.D. (marco.picone@unimore.it)
+Cloud & Internet of Things
+
+    Il primo punto introduce il concetto di Internet of Things, o IoT.
+        L'IoT si basa sulla fusione o interconnessione di vari "oggetti" o "cose" – pensiamo a sensori, dispositivi intelligenti, attuatori – utilizzando Internet come spina dorsale per la comunicazione.
+        L'obiettivo principale è stabilire un'interazione intelligente tra le persone e gli oggetti che ci circondano, e tra gli oggetti stessi.
+        Questo significa che gli oggetti non sono più entità passive, ma possono raccogliere dati, comunicarli, ricevere istruzioni e agire di conseguenza, rendendo gli ambienti più reattivi e autonomi.
+        Esempi pratici includono le case intelligenti, dove termostati, luci e assistenti vocali comunicano tra loro, oppure nell'industria con macchinari che monitorano il proprio stato e prevedono guasti.
+
+    Il secondo punto evidenzia il ruolo cruciale del Cloud nell'ecosistema IoT.
+        Il Cloud, o il "cloud computing", fornisce servizi applicativi specifici che sono fondamentali per il funzionamento e l'efficacia dell'IoT.
+        Questi servizi sono preziosi in numerosi domini applicativi.
+        Perché il Cloud è cruciale? L'IoT genera una quantità massiva di dati da un numero crescente di dispositivi. Il Cloud offre la scalabilità necessaria per archiviare ed elaborare questi dati.
+        Fornisce anche la potenza di calcolo per eseguire analisi complesse, algoritmi di intelligenza artificiale e machine learning sui dati raccolti, trasformandoli in informazioni utili.
+        Inoltre, il Cloud permette l'accesso onnipresente e la gestione centralizzata dei dispositivi IoT, indipendentemente dalla loro posizione fisica.
+        Pensiamo a servizi come l'ingestione di dati, l'analisi in tempo reale, la gestione dei dispositivi, la sicurezza e la capacità di eseguire modelli predittivi su larga scala.
+
+    Il terzo punto si concentra sull'emergere di fornitori di servizi Cloud specifici per l'IoT.
+        Un numero crescente di questi fornitori sta emergendo nel mercato, con l'obiettivo di offrire servizi basati su IoT che siano adatti e specifici per le diverse esigenze.
+        Questi fornitori, come AWS IoT, Azure IoT o Google Cloud IoT, non offrono solo l'infrastruttura di base, ma mettono a disposizione servizi pre-costituiti e ottimizzati per le sfide uniche dell'IoT.
+        Ciò include funzionalità per la connettività sicura dei dispositivi, la gestione dell'autenticazione, il routing dei messaggi, l'elaborazione dei dati al "edge" (vicino ai dispositivi) e l'integrazione con altre piattaforme e servizi Cloud.
+        Questo approccio facilita notevolmente lo sviluppo e l'implementazione di soluzioni IoT, riducendo i tempi e i costi per le aziende e garantendo al contempo un alto livello di sicurezza e affidabilità.
+
+--- Slide 4 ---
+Le principali caratteristiche e funzionalità comuni del Cloud per l'Internet of Things sono:
+
+	Elaborazione degli eventi in tempo reale
+		I dispositivi IoT generano continuamente un flusso elevato di dati, spesso in grandi volumi.
+		Il cloud deve essere capace di acquisire, processare e reagire a questi eventi quasi istantaneamente.
+		Questo è fondamentale per applicazioni come il monitoraggio di sensori critici, la rilevazione immediata di anomalie o l'attivazione di attuatori in risposta a determinati eventi.
+
+	Gestione dei dispositivi, inventario e registro
+		Questa funzionalità permette di tenere traccia di tutti i dispositivi connessi.
+		Include la registrazione di nuovi dispositivi, il monitoraggio del loro stato operativo, la gestione della configurazione, l'aggiornamento del firmware da remoto e la dismissione quando non sono più necessari.
+		È essenziale per mantenere una visione completa e organizzata di una flotta di dispositivi che può contare da decine a milioni di unità.
+
+	Comunicazione sicura
+		La sicurezza è una preoccupazione primaria nell'IoT.
+		Il cloud deve garantire che tutte le comunicazioni tra i dispositivi, i gateway e il cloud stesso siano protette.
+		Questo significa prevenire intercettazioni, manomissioni o accessi non autorizzati ai dati, tipicamente attraverso l'uso di protocolli di comunicazione crittografati come TLS/SSL.
+
+	Gateway e Hub IoT per i dispositivi
+		Questi componenti agiscono come punti di raccolta e interfaccia tra i dispositivi sul campo e la piattaforma cloud.
+		Un gateway può pre-elaborare i dati a livello locale (nel cosiddetto "edge computing") prima di inviarli al cloud, riducendo la latenza e il traffico di rete.
+		Un hub fornisce un punto di connessione scalabile e robusto per gestire l'enorme numero di dispositivi e le loro interazioni con il cloud.
+
+	Autenticazione e crittografia
+		Sono le basi della sicurezza informatica applicata all'IoT.
+		L'autenticazione verifica l'identità dei dispositivi e degli utenti che cercano di accedere al sistema, assicurandosi che solo entità autorizzate possano interagire.
+		La crittografia protegge i dati sia quando sono in transito sulla rete (data in transit) sia quando sono archiviati nel cloud (data at rest), rendendoli illeggibili a chiunque non possieda la chiave di decrittazione.
+
+	Cloni di dispositivi / Repliche / Gemelli digitali (Digital Twins)
+		Un gemello digitale è una rappresentazione virtuale di un dispositivo o sistema fisico.
+		Nel cloud IoT, permette di monitorare in tempo reale lo stato, il comportamento e le prestazioni di un oggetto fisico attraverso il suo alter ego digitale.
+		Questa tecnologia è estremamente utile per la simulazione, la diagnostica remota, la manutenzione predittiva e lo sviluppo di nuove funzionalità senza dover interagire direttamente con il dispositivo fisico.
+
+	Servizi di intelligenza e cognitivi
+		Il cloud IoT integra spesso servizi avanzati basati su Intelligenza Artificiale (AI) e Machine Learning (ML).
+		Questi servizi analizzano i grandi volumi di dati raccolti per identificare pattern, fare previsioni, automatizzare decisioni e fornire insight significativi.
+		Esempi includono l'analisi predittiva per la manutenzione, l'ottimizzazione dei processi o funzionalità di visione artificiale e riconoscimento vocale.
+
+	Archiviazione massiva (Huge Storage)
+		Dato che i dispositivi IoT generano enormi quantità di dati su base continua (Big Data), il cloud deve offrire soluzioni di storage altamente scalabili ed economicamente efficienti.
+		Questi sistemi di archiviazione sono essenziali per conservare i dati per analisi storiche, conformità normativa e future elaborazioni.
+
+	Visualizzazione e reporting dei dati
+		Trasformare i dati grezzi in informazioni comprensibili e utili è cruciale.
+		Il cloud IoT include strumenti per creare dashboard interattive, grafici e report personalizzabili.
+		Questi permettono agli utenti di monitorare facilmente lo stato dei dispositivi, le metriche operative e gli indicatori chiave di performance (KPI), facilitando la presa di decisioni.
+
+	Supporto per protocolli multipli
+		L'ecosistema IoT è estremamente variegato e frammentato, con molti protocolli di comunicazione diversi (come MQTT, CoAP, HTTP, AMQP, LoRaWAN, NB-IoT, ecc.).
+		Una piattaforma cloud IoT robusta deve essere in grado di supportare e integrare dispositivi che utilizzano una vasta gamma di questi protocolli, garantendo l'interoperabilità tra diverse tecnologie.
+
+	Integrazione e servizi di terze parti
+		Una piattaforma cloud IoT non opera in isolamento.
+		Deve essere in grado di integrarsi facilmente con altri sistemi aziendali esistenti, come ERP (Enterprise Resource Planning), CRM (Customer Relationship Management) o sistemi di gestione della supply chain.
+		Inoltre, la capacità di connettersi e utilizzare servizi esterni forniti da terze parti (ad esempio, servizi meteorologici, piattaforme di pagamento, analisi avanzate) è fondamentale per costruire soluzioni IoT complete e ricche di funzionalità.
+
+--- Slide 5 ---
+Marco Picone - Cloud & Internet of Things
+
+    Questa slide mette in evidenza alcune delle sfide e delle questioni più comuni quando si affronta un progetto che combina il Cloud con l'Internet of Things. Comprendere questi punti è fondamentale per una pianificazione efficace e per il controllo dei costi.
+
+    Il primo punto riguarda la difficoltà nella gestione di sistemi complessi.
+        I sistemi IoT, per loro natura, sono spesso distribuiti, eterogenei e generano enormi quantità di dati. La loro gestione richiede un'attenta orchestrazione di dispositivi, connettività, piattaforme cloud e applicazioni. Più dispositivi, più sensori, più fonti di dati aumentano esponenzialmente la complessità, richiedendo strumenti e competenze specifiche per il monitoraggio, il troubleshooting e l'aggiornamento. Questo può tradursi in costi operativi elevati se non gestito correttamente.
+
+    In secondo luogo, troviamo le limitazioni nell'installazione di programmi "edge" su piattaforme personalizzate.
+        Per "programmi edge" intendiamo software che viene eseguito direttamente sui dispositivi IoT o su gateway vicini alla fonte dei dati, anziché sul cloud. Spesso, questi dispositivi hanno risorse limitate (memoria, potenza di calcolo) o sistemi operativi proprietari, rendendo difficile o impossibile l'installazione di software personalizzato o complesso. Questa limitazione può forzare una dipendenza maggiore dal cloud per l'elaborazione, aumentando i costi di trasferimento dati e di calcolo, o richiedere investimenti in hardware "edge" più potenti e costosi.
+
+    Il terzo aspetto, cruciale per la nostra discussione sui costi, è la gestione e il controllo dei costi.
+        I costi in un progetto Cloud-IoT possono essere molto articolati e difficili da prevedere. includono:
+            Costi dell'infrastruttura cloud: per calcolo, storage, networking.
+            Costi di trasferimento dati: spesso un fattore inatteso, specialmente quando si spostano grandi volumi di dati dall'edge al cloud (data egress).
+            Costi dei servizi gestiti: piattaforme IoT PaaS (Platform as a Service) o servizi specifici.
+            Costi operativi: per il monitoraggio, la manutenzione e l'aggiornamento continuo dei sistemi.
+            Costi nascosti: come il "vendor lock-in", di cui parleremo.
+        È essenziale implementare una strategia di ottimizzazione dei costi fin dall'inizio, monitorando attentamente l'utilizzo delle risorse per evitare sprechi e sorprese nel budget.
+
+    Un forte legame con il venditore/fornitore (vendor lock-in) rappresenta un'altra sfida significativa.
+        Quando si sceglie un provider cloud o una piattaforma IoT specifica, si rischia di creare una dipendenza dalle sue tecnologie proprietarie, dalle API e dai servizi. Questo rende estremamente difficile e costoso migrare a un altro fornitore in futuro. Il vendor lock-in può limitare la vostra flessibilità, la capacità di negoziare prezzi migliori e l'adozione di soluzioni più innovative o convenienti da altri provider. È importante valutare soluzioni che supportino standard aperti o architetture multi-cloud per mitigare questo rischio.
+
+    Infine, la curva di apprendimento.
+        Le tecnologie Cloud e IoT sono in continua evoluzione e richiedono competenze specializzate. Il personale deve essere formato per comprendere e gestire architetture distribuite, protocolli IoT, servizi cloud e sicurezza. Questa curva di apprendimento può rallentare l'adozione, aumentare i costi di formazione o la necessità di affidarsi a consulenti esterni. La mancanza di competenze interne può impattare i tempi di implementazione e la qualità delle soluzioni.
+
+    Alla luce di questi punti, sorgono due domande fondamentali:
+        Il Cloud è sempre la migliore opzione per gestire un progetto IoT?
+        Una visione Cloud-centrica è l'unico approccio per progettare un'applicazione IoT?
+    Queste domande ci spingono a considerare alternative o approcci ibridi, come l'edge computing, dove parte dell'elaborazione avviene più vicino ai dispositivi, per ridurre la latenza, ottimizzare i costi di trasmissione dati e aumentare la resilienza del sistema. Valuteremo queste opzioni nelle prossime sezioni.
+
+--- Slide 6 ---
+In questa parte del corso, andremo a esplorare "L'Architettura di Internet come la conosciamo".
+
+    Questo modulo ci darà una visione d'insieme su come è costruita Internet e sui principi fondamentali che la rendono operativa ogni giorno.
+
+    Capiremo come funziona questa rete globale, quali sono i suoi componenti essenziali e come interagiscono tra loro per permettere la comunicazione e lo scambio di dati a livello mondiale.
+
+    Anche se il nostro focus principale non è strettamente tecnico, comprendere le basi dell'architettura di Internet è fondamentale per diverse ragioni.
+
+        Ci aiuterà a contestualizzare meglio le decisioni tecnologiche che si prendono in azienda, a valutare la gestione delle infrastrutture IT e, indirettamente, a comprendere le implicazioni sui costi, inclusi quelli di formazione per le risorse umane coinvolte in progetti digitali.
+
+    Vedremo concetti come i protocolli di comunicazione, i diversi livelli in cui è strutturata la rete e i dispositivi chiave che ne costituiscono la spina dorsale.
+
+    L'obiettivo è fornire una base solida per apprezzare la complessità e l'importanza di questa infrastruttura, che è alla base di quasi tutte le attività digitali moderne.
+
+--- Slide 7 ---
+Il titolo di questa slide è "Cloud 'Addition'".
+    Questo concetto si riferisce al processo di integrare nuove capacità o servizi cloud nell'infrastruttura IT esistente di un'organizzazione, o di espandere l'utilizzo di risorse cloud già presenti.
+
+    In pratica, significa:
+        Aggiungere nuovi servizi basati sul cloud, come piattaforme per lo sviluppo software (PaaS), infrastrutture di calcolo (IaaS) o applicazioni specifiche (SaaS).
+        Estendere le funzionalità attuali, ad esempio migrando database o applicazioni critiche nel cloud per migliorarne scalabilità e resilienza.
+        Introdurre nuove metodologie di lavoro e skill all'interno del team, necessarie per gestire e ottimizzare queste risorse.
+
+    L'obiettivo principale di questa "aggiunta" è solitamente duplice:
+        Da un lato, modernizzare l'infrastruttura, rendendola più agile, flessibile e capace di adattarsi rapidamente alle esigenze del mercato.
+        Dall'altro, ottimizzare i costi operativi, trasformando spese di capitale in spese operative e sfruttando modelli di pagamento "pay-as-you-go".
+
+    Questa fase di integrazione non è solo tecnica; richiede un'attenta pianificazione strategica, una valutazione dei rischi e, fondamentale per il nostro corso, un investimento nella formazione del personale.
+    Senza le giuste competenze, anche la migliore tecnologia cloud non può esprimere il suo pieno potenziale.
+
+--- Slide 8 ---
+Il tema che affronteremo, o che introduce questa sezione, è quello della "Sfida della Connettività".
+Si tratta di un concetto ormai centrale nel panorama tecnologico moderno, che influenza ogni aspetto delle nostre attività, sia personali che professionali.
+
+	Quando parliamo di connettività oggi, andiamo ben oltre la semplice connessione a internet.
+	Ci riferiamo alla capacità di dispositivi, sistemi e persone di interagire e scambiare dati in modo fluido e costante.
+	Questo include l'Internet delle Cose (IoT), i sistemi aziendali distribuiti, il lavoro e la formazione a distanza, e persino le infrastrutture critiche.
+
+	La "sfida" nasce dalla complessità di garantire che questa connettività sia:
+		Affidabile: cioè sempre disponibile e funzionale, senza interruzioni.
+		Sicura: protetta da minacce esterne e in grado di salvaguardare la privacy dei dati.
+		Performante: abbastanza veloce e reattiva da supportare applicazioni e servizi esigenti.
+		Scalabile: capace di adattarsi a esigenze crescenti senza crollare.
+		Gestibile: semplice da monitorare, mantenere e risolvere in caso di problemi.
+
+	Un'interruzione o una debolezza nella catena della connettività può avere ripercussioni enormi, bloccando operazioni, impedendo l'accesso a informazioni vitali e creando frustrazione.
+
+L'esempio citato nella slide, che risale al 2016 e riguarda Nest, è emblematico.
+Nest è un'azienda pionieristica nel settore della casa intelligente, nota per i suoi termostati smart, videocamere di sicurezza e altri dispositivi connessi.
+
+	L'articolo a cui fa riferimento la slide documenta un'interruzione significativa che ha colpito le app e i servizi di Nest.
+	Questo ha significato che gli utenti, pur avendo i dispositivi fisicamente in casa, non potevano più controllarli tramite le loro applicazioni, perdendo funzionalità essenziali come la regolazione della temperatura o la visione delle telecamere di sicurezza.
+
+	Questo incidente è un chiaro esempio di come la "Sfida della Connettività" non sia un problema da poco.
+	Anche aziende leader nel loro settore, con infrastrutture avanzate e risorse ingenti, possono subire guasti che compromettono l'esperienza utente a causa di problemi legati alla connettività dei loro servizi, spesso basati su cloud.
+
+	Le conseguenze di tali eventi vanno oltre il semplice disagio tecnico. Generano costi significativi, sia diretti che indiretti:
+		Costi di supporto tecnico per gestire le richieste e le lamentele degli utenti.
+		Danni all'immagine e alla reputazione del brand.
+		Perdite di produttività per gli utenti che non possono utilizzare i servizi.
+		E, aspetto cruciale per il nostro corso, costi di formazione.
+		Il personale di supporto ha bisogno di formazione specifica per affrontare queste crisi e fornire indicazioni agli utenti.
+		Gli ingegneri e i team di sviluppo potrebbero necessitare di formazione su nuove architetture, protocolli di comunicazione o soluzioni di resilienza per prevenire futuri incidenti.
+		A volte, anche gli utenti finali beneficiano di una formazione su come gestire eventuali disconnessioni o utilizzare funzionalità offline.
+
+	Questo caso dimostra come la connettività non sia un semplice dettaglio tecnico, ma un pilastro fondamentale che, se instabile, può generare una cascata di problemi e, di conseguenza, costi aggiuntivi non trascurabili, inclusi quelli legati alla formazione del personale e degli utenti.
+
+--- Slide 9 ---
+Questa slide introduce la tematica che affronteremo nel corso di questa sezione: le Architetture Edge e Fog.
+
+     L'architettura Edge/Fog rappresenta un'evoluzione significativa nel modo in cui pensiamo alla computazione e alla gestione dei dati.
+     Tradizionalmente, i dati venivano inviati a data center centralizzati, spesso identificati con il termine 'cloud', per essere elaborati.
+     Con l'emergere di un numero sempre maggiore di dispositivi connessi – pensiamo all'Internet delle Cose (IoT), a sensori industriali avanzati o ai veicoli autonomi – questa strategia puramente centralizzata presenta delle sfide crescenti.
+     Le principali problematiche riguardano la latenza, ovvero il ritardo nella trasmissione e nell'elaborazione dei dati, e il carico sulla rete, che può diventare insostenibile al crescere del volume e della velocità dei dati generati.
+
+     Le architetture Edge e Fog mirano a risolvere questi problemi fondamentali. L'approccio consiste nel portare la capacità di calcolo, lo storage dei dati e le funzionalità di elaborazione più vicine alla 'sorgente' dei dati stessi.
+     Questo significa elaborare le informazioni direttamente sul luogo in cui vengono generate o in prossimità, riducendo la necessità di inviare tutto al cloud centrale.
+     Immaginate scenari come l'analisi video in tempo reale su una telecamera di sicurezza, il monitoraggio delle condizioni di macchinari industriali direttamente in fabbrica, o la gestione del traffico in una smart city.
+
+     Durante questa sezione, approfondiremo diversi aspetti cruciali:
+          Definizione e caratteristiche distintive dell'Edge Computing e del Fog Computing.
+          Le principali differenze e le sinergie che possono esistere tra questi due paradigmi distribuiti.
+          I vantaggi operativi che queste architetture offrono, in termini di efficienza, sicurezza e reattività.
+          Le sfide implementative associate, e, aspetto fondamentale per il nostro corso, le implicazioni dirette sui costi di formazione del personale e sulla gestione infrastrutturale.
+
+--- Slide 10 ---

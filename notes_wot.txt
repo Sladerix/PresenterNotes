@@ -1,0 +1,485 @@
+--- Slide 1 ---
+Benvenuti a questa lezione per l'Anno Accademico 2024/2025.
+
+Il corso di oggi si concentrerà sulle Architetture IoT Interoperabili, esplorando concetti chiave come il Web of Things e l'Internet of Things Intelligente.
+
+Per iniziare, è fondamentale comprendere il concetto di Internet of Things, o IoT. Si tratta di una rete di oggetti fisici incorporati con sensori, software e altre tecnologie che permettono loro di connettersi e scambiare dati con altri dispositivi e sistemi tramite internet. Immaginate miliardi di dispositivi, dalle auto ai termostati, che raccolgono e condividono informazioni.
+
+Il fulcro del nostro discorso sarà l'interoperabilità. In un ecosistema IoT, ci troviamo di fronte a una moltitudine di dispositivi e piattaforme di diversi produttori. Senza interoperabilità, questi sistemi non possono comunicare efficacemente tra loro. Questo porta a silos di dati, integrazioni complesse e costose, e una limitata scalabilità. Un'architettura interoperabile, invece, assicura che dispositivi e servizi diversi possano lavorare insieme senza problemi, riducendo i costi di integrazione e formazione, e accelerando lo sviluppo di nuove soluzioni. È cruciale per sbloccare il vero potenziale dell'IoT.
+
+Successivamente, approfondiremo il Web of Things, o WoT. Questo approccio mira a semplificare lo sviluppo e l'integrazione IoT applicando i principi e le tecnologie del web, come HTTP, REST e JSON, agli oggetti connessi. L'idea è rendere i dispositivi IoT accessibili e controllabili attraverso le stesse tecnologie che usiamo per navigare sul web. Questo non solo rende la programmazione IoT più familiare per gli sviluppatori web, riducendo la necessità di competenze specialistiche, ma facilita anche la creazione di applicazioni innovative e la collaborazione tra diversi sistemi IoT.
+
+Infine, esamineremo l'Intelligent Internet of Things, ovvero l'IIoT. Questo va oltre la semplice connessione e scambio di dati, incorporando capacità di intelligenza artificiale, machine learning e analisi avanzate direttamente all'interno della rete IoT o ai suoi margini, il cosiddetto "edge computing", o nel cloud. L'IIoT permette ai sistemi di prendere decisioni autonome, di ottimizzare processi, di prevedere guasti o comportamenti futuri, e di apprendere dai dati raccolti. Pensate alla manutenzione predittiva in ambito industriale o a sistemi di gestione energetica che si adattano in tempo reale. Questo strato di intelligenza trasforma i dati grezzi in informazioni preziose, guidando efficienze e nuove opportunità di business.
+
+Sono il Professor Marco Picone e vi guiderò attraverso questi argomenti complessi, fornendo una visione chiara e pratica delle loro implicazioni.
+
+--- Slide 2 ---
+Questo modulo è dedicato alle Architetture IoT Interoperabili, con un focus specifico sul "Web of Things". In questa sezione del corso, esploreremo come il paradigma del Web possa essere esteso al mondo dell'Internet delle Cose per superare le sfide di interoperabilità e frammentazione che spesso affliggono le implementazioni IoT tradizionali.
+
+    L'obiettivo principale è fornire una comprensione chiara di cosa sia il Web of Things e come si posizioni come un'evoluzione rispetto all'IoT tradizionale.
+
+Il percorso che seguiremo include i seguenti argomenti:
+
+    ●   Da IoT a WoT
+            Qui discuteremo il percorso evolutivo che porta dall'Internet delle Cose come lo conosciamo al concetto di Web of Things. Analizzeremo le motivazioni, le limitazioni dell'IoT tradizionale e come WoT cerchi di affrontarle sfruttando le ben consolidate tecnologie e principi del Web.
+
+    ●   Definizione di WoT
+            Successivamente, forniremo una definizione chiara e concisa del Web of Things. Comprendiamo i suoi scopi principali, ovvero rendere i dispositivi IoT "cittadini di prima classe" del Web, accessibili e interoperabili utilizzando standard web.
+
+    ●   W3C e WoT
+            Esploreremo il ruolo fondamentale del World Wide Web Consortium, il W3C, nella standardizzazione del Web of Things. Il W3C è l'organismo internazionale che sviluppa standard aperti per il Web, e il suo coinvolgimento è cruciale per garantire l'adozione e l'interoperabilità su larga scala di WoT.
+
+    ●   Terminologia
+            Introdurremo la terminologia chiave specifica del Web of Things. Questo includerà concetti come "Thing", "Thing Description", "Properties", "Actions", "Events" e altri termini essenziali per comprendere il framework WoT.
+
+    ●   Pattern Comuni
+            Discuteremo i pattern di interazione più comuni che i dispositivi IoT espongono nel contesto del Web of Things. Capiremo come un "Thing" può essere interrogato per le sue proprietà, come si possono invocare azioni su di esso e come può notificare eventi.
+
+    ●   Principi di Design
+            Esamineremo i principi di design fondamentali che guidano lo sviluppo e l'implementazione delle soluzioni Web of Things. Questi principi includono aspetti come la decentralizzazione, la sicurezza, l'usabilità web-first e l'apertura.
+
+    ●   Componenti Architetturali
+            Approfondiremo i componenti architetturali principali di un sistema Web of Things. Analizzeremo gli elementi costitutivi che permettono ai dispositivi di essere integrati nel Web e di interagire tra loro.
+
+    ●   Thing Description
+            Dedicheremo particolare attenzione alla "Thing Description" (TD). Spiegheremo cos'è, a cosa serve e perché è un elemento cruciale nel Web of Things. La TD è un documento machine-readable che descrive le funzionalità di un "Thing", rendendolo scopribile e utilizzabile automaticamente.
+
+    ●   Web Thing
+            Definiremo cosa si intende per "Web Thing". Un Web Thing è un dispositivo o una risorsa che espone le sue funzionalità e i suoi dati attraverso interfacce standard basate sul Web, rendendolo direttamente accessibile e controllabile tramite tecnologie web.
+
+    ●   Casi d'Uso
+            Infine, illustreremo una serie di casi d'uso pratici e scenari applicativi in cui il Web of Things può apportare vantaggi significativi, migliorando l'integrazione, la flessibilità e la scalabilità delle soluzioni IoT.
+
+Le principali fonti e riferimenti per il materiale che presenteremo in questo modulo sono:
+
+    -   Il sito ufficiale del Web of Things presso il W3C, che è la risorsa principale per gli standard e le specifiche.
+    -   E il libro "Building the Web of Things With examples in Node.js and Raspberry Pi" di Dominique D. Guinard e Vlad M. Trifa, un'ottima risorsa pratica per chi vuole implementare soluzioni WoT.
+
+--- Slide 3 ---
+Oggi esploreremo il percorso che ci porta dall'Internet of Things, o IoT, al concetto emergente del Web of Things, o WoT. Questa transizione è fondamentale per comprendere le sfide e le opportunità che ci attendono nel panorama della connettività intelligente.
+
+    La rivoluzione dell'Internet delle Cose ha introdotto innovazioni incredibili, aprendo la strada a opportunità enormi in settori come la domotica, le città intelligenti, la sanità digitale e l'automazione industriale.
+    Dispositivi connessi migliorano l'efficienza dei processi, ottimizzano il consumo energetico e offrono servizi personalizzati.
+    Tuttavia, queste immense possibilità portano con sé, inevitabilmente, anche nuovi e significativi rischi.
+    Questi rischi vanno dalla sicurezza informatica, con la possibilità di attacchi a infrastrutture critiche, alla gestione complessa della privacy dei dati personali, che potrebbero essere raccolti e utilizzati senza il consenso o la consapevolezza degli utenti.
+
+    Una missione cruciale che ci troviamo ad affrontare è quella di garantire che l'Internet, e di conseguenza l'IoT, rimanga una risorsa pubblica globale.
+    Ciò significa che deve essere aperta, sicura e accessibile a tutti, senza barriere tecniche o economiche che potrebbero creare un nuovo divario digitale.
+    Un IoT inclusivo è essenziale per distribuire equamente i benefici di questa tecnologia e prevenire la concentrazione di potere in pochi attori, garantendo che tutti possano trarre vantaggio dalle innovazioni.
+
+    Questa missione è più importante che mai proprio con l'avvento dell'IoT.
+    Man mano che nuovi tipi di dispositivi, dai sensori ambientali agli elettrodomestici intelligenti, si connettono alla rete, emergono sfide significative che riguardano principalmente tre aspetti chiave:
+        La sicurezza dei dati e dei sistemi, fondamentale per proteggere sia le infrastrutture che gli utenti da attacchi e abusi.
+        La privacy degli utenti, con la necessità di controllare l'uso dei propri dati personali e garantire trasparenza.
+        L'interoperabilità tra i diversi dispositivi e piattaforme, per evitare ecosistemi chiusi e frammentati che impediscono la comunicazione e la collaborazione.
+    Questi tre pilastri sono interconnessi e rappresentano nodi cruciali per lo sviluppo sostenibile e responsabile dell'IoT.
+
+    Purtroppo, molti dei nuovi dispositivi che si connettono a Internet nascono spesso con vulnerabilità di sicurezza intrinseche, a volte dovute a processi di sviluppo rapidi o costi ridotti.
+    Ancora più problematico è il fatto che spesso non ricevono aggiornamenti software regolari per correggere queste vulnerabilità nel tempo, lasciandoli esposti a potenziali attacchi informatici per anni.
+    Questo solleva questioni di privacy molto serie, soprattutto per quanto riguarda la raccolta, l'archiviazione e l'utilizzo di grandi quantità di dati estremamente personali.
+    Parliamo di informazioni sulla salute, sulle abitudini di consumo, sulla localizzazione, sul comportamento, che se gestite impropriamente o compromesse possono avere conseguenze significative sulla vita degli individui.
+    È fondamentale che questi dati siano protetti, che le politiche di privacy siano trasparenti e che gli utenti abbiano pieno controllo su come le loro informazioni vengono utilizzate, ad esempio tramite meccanismi di consenso granulari.
+
+    Questo scenario complesso ci spinge a riflettere su come possiamo costruire un futuro dell'IoT più robusto, affidabile e centrato sull'utente.
+    Il passaggio a un "Web of Things" mira proprio a integrare i dispositivi IoT in un ecosistema web più standardizzato, sicuro e interoperabile, sfruttando le consolidate architetture e protocolli del web per affrontare queste sfide in modo sistematico e promuovere un ambiente più aperto e gestibile per tutti.
+
+--- Slide 4 ---
+Questa slide introduce il concetto di "Web of Things", che rappresenta un'evoluzione rispetto all'attuale paradigma dell'Internet of Things.
+
+	L'Internet of Things, o IoT, si riferisce alla rete di oggetti fisici incorporati con sensori, software e altre tecnologie allo scopo di connettere e scambiare dati con altri dispositivi e sistemi tramite internet.
+
+	Tuttavia, il panorama attuale dell'IoT presenta alcune sfide significative:
+
+*   	**Stack Tecnologici Proprietari Verticali:** La maggior parte dei dispositivi IoT che troviamo oggi sul mercato utilizza "stack tecnologici verticali proprietari". Questo significa che un singolo fornitore o produttore controlla l'intera pila tecnologica, dal dispositivo fisico (sensore, attuatore) al software embedded, alla piattaforma cloud e alle applicazioni utente.
+    *   	Questi sistemi sono spesso "costruiti attorno a un punto di controllo centrale", il che implica una dipendenza da un'unica entità per il funzionamento e la gestione.
+    *   	Il problema principale è che questi sistemi "non sempre comunicano tra loro". Immaginate di avere un sistema di illuminazione intelligente di un brand e un sistema di termostati di un altro: spesso non sono progettati per interagire nativamente. Questa mancanza di interoperabilità crea ecosistemi chiusi e frammentati.
+
+*   	**Integrazioni Specifica per Fornitore:** Quando è necessario che sistemi di diversi produttori comunichino, il processo "richiede integrazioni specifiche per ogni fornitore". Questo significa sviluppare soluzioni ad hoc, spesso complesse e costose, per far dialogare dispositivi e piattaforme che altrimenti sarebbero isolati.
+    *   	Queste integrazioni "per-vendor" sono un onere significativo in termini di sviluppo, manutenzione e aggiornamento. Ogni volta che un fornitore modifica la propria API o il proprio sistema, l'integrazione potrebbe rompersi, richiedendo interventi e quindi costi aggiuntivi.
+    *   	Questo aspetto aumenta notevolmente la complessità per le aziende che vogliono implementare soluzioni IoT su larga scala, poiché devono gestire un mosaico di sistemi diversi e costose connessioni personalizzate tra di essi.
+
+*   	**Sforzi di Standardizzazione e Complessità del Mercato:** Sebbene ci siano "sforzi per creare standard" per l'interoperabilità IoT, come ad esempio Matter per la smart home, oneM2M per il settore enterprise, o le iniziative del W3C per il Web of Things, il panorama è ancora "estremamente complesso".
+    *   	Ci sono molti attori in gioco, diverse tecnologie concorrenti e settori verticali con esigenze specifiche (industria, smart city, sanità, automotive).
+    *   	Di conseguenza, "non esiste ancora un modello dominante unico o un leader di mercato" che abbia imposto uno standard universale. Questa frammentazione rende difficile per le organizzazioni scegliere la tecnologia giusta e investire in soluzioni che siano a prova di futuro.
+    *   	Questa incertezza si traduce anche in maggiori costi di formazione per il personale, che deve essere costantemente aggiornato su nuove tecnologie e standard emergenti, o su come gestire la coesistenza di diverse piattaforme.
+
+	Il "Web of Things" cerca di superare queste limitazioni, proponendo un approccio che sfrutta i principi e le tecnologie del web per creare un ecosistema IoT più aperto, interoperabile e scalabile.
+
+--- Slide 5 ---
+    Il tema di oggi ci porta a esplorare un'evoluzione importante: dal concetto di Internet delle Cose, o IoT, al Web delle Cose, il WoT.
+
+    L'Internet delle Cose è un ecosistema vastissimo, dove oggetti fisici sono dotati di sensori, software e altre tecnologie per connettersi e scambiare dati con altri dispositivi e sistemi su internet. Pensate a smart home, wearable devices, sensori industriali.
+    
+    Tuttavia, come suggerisce la citazione presente sulla slide, l'attuale stato dell'IoT presenta alcune sfide. La frase "Usare l'Internet delle Cose oggi è molto simile a condividere informazioni su Internet prima che esistesse il World Wide Web" è molto evocativa.
+
+        Prima del World Wide Web, internet esisteva, ma era un insieme frammentato di reti e protocolli diversi. Per accedere alle informazioni, bisognava conoscere il sistema specifico e il modo in cui era stato implementato, spesso con interfacce proprietarie. Non c'era un modo universale per collegare e navigare le informazioni.
+
+    Allo stesso modo, nell'IoT odierno, abbiamo una moltitudine di piattaforme, standard e protocolli che non sempre comunicano facilmente tra loro. Ogni produttore può avere il suo ecosistema, i suoi formati di dati, i suoi meccanismi di sicurezza. Questo porta a problemi di interoperabilità.
+
+        È come se avessimo tanti sistemi "ipertestuali" concorrenti, ma mancasse un protocollo a livello applicativo unificante.
+        L'IoT è estremamente potente, ma la sua frammentazione rende complessa l'integrazione di dispositivi di produttori diversi e aumenta la complessità dello sviluppo di applicazioni che devono interagire con essi.
+
+    Il Web delle Cose nasce proprio per affrontare queste sfide. L'obiettivo è portare i principi e le tecnologie del World Wide Web nell'ambito dell'IoT.
+
+        Immaginate di poter interagire con qualsiasi dispositivo IoT nello stesso modo in cui interagite con una pagina web o un servizio online, utilizzando protocolli standard come HTTP e formati di dati come JSON.
+        Questo significherebbe un'interfaccia standardizzata e un'API comune per ogni "cosa", rendendo molto più semplice per gli sviluppatori creare applicazioni che integrano dispositivi diversi, senza dover imparare protocolli specifici o usare SDK proprietari per ogni singolo device.
+
+    In pratica, il WoT cerca di creare un livello di astrazione che renda le "cose" accessibili e interoperabili come risorse web.
+    Questo promette di ridurre significativamente la complessità, i tempi di sviluppo e, di conseguenza, i costi associati all'integrazione e alla gestione di soluzioni IoT, promuovendo una maggiore adozione e innovazione.
+    
+        Pensiamo alla possibilità di riutilizzare competenze web standard per lo sviluppo IoT, aprendo il campo a una platea molto più ampia di sviluppatori.
+        L'obiettivo è rendere l'IoT più aperto, più semplice da usare e più scalabile, un po' come il World Wide Web ha fatto per l'accesso alle informazioni.
+
+--- Slide 6 ---
+Il Web of Things, o WoT, rappresenta un approccio mirato ad applicare i principi e le migliori pratiche imparate dallo sviluppo e dall'evoluzione del World Wide Web al mondo dell'Internet of Things.
+	L'idea è rendere gli oggetti connessi più accessibili e interoperabili, proprio come lo sono le pagine web. Pensiamo a come il web ha standardizzato l'accesso alle informazioni; il WoT cerca di fare lo stesso per i dispositivi e i servizi IoT.
+
+L'obiettivo principale del WoT è costruire un Internet of Things decentralizzato. Questo significa evitare la creazione di ecosistemi proprietari chiusi e favorire un ambiente in cui i dispositivi e i servizi possano comunicare tra loro indipendentemente dal produttore o dalla piattaforma.
+	Per raggiungere questo, il WoT si concentra su tre aspetti chiave:
+		**Interfacce standard:** Utilizzare protocolli e linguaggi comuni per permettere a "things" (oggetti), dispositivi e servizi di essere facilmente collegabili tra loro e scopribili all'interno della rete. Questo semplifica enormemente il processo di integrazione.
+		**Modello di dati standard:** Definire un modo uniforme di rappresentare le informazioni che provengono dai dispositivi o che vengono scambiate con essi. Questo è cruciale per l'interoperabilità, poiché assicura che un dato letto da un sensore di temperatura di un produttore sia interpretato correttamente anche da un'applicazione sviluppata per un sensore diverso.
+		**API standard:** Fornire interfacce di programmazione applicativa (Application Programming Interfaces) uniformi. Queste API permettono agli sviluppatori di interagire con i dispositivi e i servizi IoT in modo consistente, senza dover imparare protocolli specifici per ogni singolo dispositivo. Immaginate di avere un'unica "lingua" per parlare con tutti i vostri dispositivi smart, indipendentemente da chi li ha prodotti.
+
+È fondamentale capire che il Web of Things non si propone come l'ennesima piattaforma IoT verticale, ovvero un'altra soluzione completa che compete direttamente con quelle già esistenti sul mercato, come ad esempio piattaforme cloud specifiche o ecosistemi chiusi.
+	Al contrario, il WoT è pensato come uno **strato applicativo orizzontale e unificante**. Il suo ruolo è quello di "ponte", di un livello che si posiziona al di sopra dei vari protocolli e piattaforme IoT sottostanti (come MQTT, CoAP, Zigbee, Bluetooth, ecc.).
+	In pratica, il WoT consente a questi diversi "linguaggi" e "mondi" IoT di comunicare tra loro in modo standardizzato, offrendo un'interfaccia unica per gli sviluppatori e gli utenti finali, indipendentemente dalla tecnologia di base utilizzata da ciascun dispositivo. Questo riduce la frammentazione, aumenta la capacità di integrazione e semplifica lo sviluppo di applicazioni che interagiscono con un'ampia varietà di oggetti connessi.
+
+--- Slide 7 ---
+Il W3C e il Web of Things.
+
+    Il W3C, acronimo di World Wide Web Consortium, è la principale organizzazione internazionale incaricata di definire gli standard per il World Wide Web. È un'entità cruciale per garantire che il Web funzioni in modo coerente e interoperabile per tutti.
+
+    Fondato nel 1994 da Tim Berners-Lee, l'inventore del Web, il W3C è un consorzio composto da centinaia di organizzazioni membri. Questi membri, che includono aziende tecnologiche, università e enti governativi, collaborano attivamente per sviluppare e pubblicare nuove specifiche tecniche, chiamate appunto "standard". Il loro lavoro non si limita alla standardizzazione; il W3C si impegna anche nell'educazione, nella sensibilizzazione e nello sviluppo di software di riferimento.
+
+    All'interno del W3C esiste un'iniziativa specifica chiamata "Web of Things Interest Group". Questo gruppo ha il compito di fungere da forum per discussioni tecniche approfondite.
+
+    L'obiettivo primario del gruppo è identificare in modo chiaro i casi d'uso e i requisiti tecnici necessari per lo sviluppo di mercati aperti di applicazioni e servizi. Questi mercati sono basati sull'applicazione delle tecnologie Web in un contesto che combina l'Internet of Things (IoT) con il Web dei dati.
+
+    Per comprendere meglio questo, facciamo chiarezza sui due concetti:
+
+        Internet of Things (IoT): Si riferisce alla rete di oggetti fisici, o "cose", che sono dotati di sensori, software e altre tecnologie. Questi oggetti possono connettersi e scambiare dati con altri dispositivi e sistemi attraverso Internet. Pensate a dispositivi smart home, sensori industriali, veicoli connessi.
+
+        Web dei Dati: È un'estensione del Web tradizionale che si concentra sulla pubblicazione di dati in un formato strutturato e interconnesso. Questo permette ai dati di essere non solo leggibili dagli umani, ma anche facilmente interpretabili e utilizzabili dalle macchine, facilitando l'interoperabilità e il riutilizzo.
+
+    Il "Web of Things" è l'approccio che mira a integrare i dispositivi IoT direttamente nel World Wide Web, utilizzando tecnologie Web standard. L'idea è di portare i principi del Web, come l'apertura, l'interoperabilità e la decentralizzazione, nel mondo dell'IoT. Questo significa rendere i dispositivi IoT più semplici da scoprire, da collegare e da controllare attraverso interfacce Web comuni.
+
+    L'importanza di questo approccio è notevole per diversi motivi:
+        Interoperabilità: I dispositivi di diversi produttori spesso utilizzano protocolli proprietari. Il Web of Things mira a superare questa frammentazione, consentendo ai dispositivi di "parlarsi" tra loro indipendentemente dal produttore.
+        Semplificazione dello sviluppo: Gli sviluppatori possono sfruttare le loro competenze esistenti nelle tecnologie Web (come HTTP, JSON, REST) per costruire applicazioni IoT, riducendo la curva di apprendimento e i costi.
+        Sicurezza e Scalabilità: Sfruttando l'infrastruttura e i meccanismi di sicurezza già consolidati del Web.
+        Riduzione dei costi: Minori costi di integrazione per sviluppare soluzioni che coinvolgono più dispositivi e servizi.
+
+    Per approfondire, è possibile consultare il sito ufficiale del gruppo di interesse al seguente indirizzo: `https://www.w3.org/WoT/`.
+
+--- Slide 8 ---
+Questa slide ci introduce al contesto del Web of Things (WoT), un'iniziativa fondamentale nel panorama attuale dell'Internet of Things.
+    Il mio nome è Marco Picone, e sono a vostra disposizione per eventuali domande o approfondimenti.
+
+Il Web of Things Interest Group è un'iniziativa che mira a riunire tutti gli attori interessati al Web of Things.
+    Il loro obiettivo primario è quello di esplorare nuove idee e concetti in una fase preliminare, prima che questi vengano portati alla standardizzazione vera e propria.
+        Questo gruppo collabora attivamente con altre organizzazioni di sviluppo standard e alleanze industriali.
+        Pensate a questo come a un forum di discussione dove si identificano le sfide e le opportunità.
+        Questo approccio proattivo è cruciale per anticipare e risolvere potenziali problemi di integrazione, riducendo così i costi futuri legati alla formazione e all'adattamento a soluzioni proprietarie.
+
+Successivamente, queste idee vengono prese in carico dal Web of Things Working Group.
+    La missione principale di questo gruppo di lavoro è contrastare la frammentazione dell'IoT.
+        Attualmente, l'Internet delle Cose è caratterizzato da una miriade di piattaforme, protocolli e linguaggi diversi.
+        Questa frammentazione comporta costi significativi, sia in termini di sviluppo che di formazione.
+            Ogni volta che si deve integrare un nuovo dispositivo o servizio IoT da un ecosistema diverso, è necessario acquisire nuove competenze specifiche, il che si traduce in un aumento dei costi di formazione per il personale e in una maggiore complessità di gestione dei sistemi.
+    L'obiettivo del WoT Working Group è specificare dei "building blocks", ovvero dei blocchi costruttivi standardizzati, che permettano una facile integrazione dei dispositivi e dei servizi IoT su diverse piattaforme e domini applicativi.
+        Immaginate di non dover reimparare un linguaggio completamente nuovo ogni volta che acquistate un elettrodomestico smart di una marca diversa.
+        Questo è esattamente ciò che il WoT si propone di fare: creare un linguaggio comune e degli schemi di interazione standardizzati.
+        Questo semplifica enormemente il lavoro di integrazione, riducendo drasticamente la necessità di formazione specialistica per ogni singola tecnologia e accelerando lo sviluppo di nuove applicazioni.
+
+Per chi fosse interessato ad approfondire ulteriormente l'argomento, il link che vedete sulla slide porta direttamente alla pagina del W3C dedicata al Web of Things, dove potrete trovare tutta la documentazione e le specifiche tecniche.
+
+--- Slide 9 ---
+Slide di titolo con il mio nome e la mia affiliazione. Questa slide serve per introdurre il corso e il relatore che vi accompagnerà in questo percorso formativo.
+
+W3C - Architettura del Web of Things
+
+Questa slide introduce la specifica architettonica per il Web of Things, sviluppata e mantenuta dal W3C, il World Wide Web Consortium.
+	Il W3C è l'organizzazione internazionale principale che si occupa di sviluppare e definire gli standard aperti per il World Wide Web. La loro attività è cruciale per garantire l'interoperabilità, l'accessibilità e l'evoluzione delle tecnologie web.
+	Il concetto di Web of Things, o WoT, si propone di estendere i principi e i paradigmi del World Wide Web, come l'interoperabilità semantica e l'uso di protocolli standard basati sul web (HTTP, CoAP), agli oggetti fisici e ai servizi dell'Internet of Things (IoT). L'obiettivo primario è superare le frammentazioni tipiche dell'IoT, dove spesso si incontrano ecosistemi chiusi e proprietari, per promuovere un ambiente più aperto, integrato e facile da gestire.
+	In questa specifica, l'architettura descritta è un modello astratto, il che significa che si concentra su concetti e principi generali piuttosto che su dettagli di implementazione specifici.
+
+Questa architettura astratta è stata definita partendo da un insieme rigoroso di requisiti.
+	Questi requisiti sono stati a loro volta derivati e consolidati dall'analisi di numerosi casi d'uso concreti, provenienti da svariati domini applicativi.
+	Questo approccio "dal basso", basato su scenari reali, garantisce che l'architettura sia robusta, versatile e in grado di rispondere efficacemente a necessità pratiche in settori diversi come l'automazione industriale, le smart city, la domotica avanzata, la telemedicina e la sanità digitale, e molti altri ancora.
+	Comprendere come i requisiti modellano l'architettura è fondamentale per valutarne l'applicabilità e i benefici attesi, ad esempio in termini di riduzione dei costi di sviluppo, integrazione e, in ultima analisi, dei costi di formazione del personale per l'adozione di nuove soluzioni.
+
+La specifica identifica anche una serie di "blocchi costitutivi" modulari.
+	Questi blocchi sono componenti concettuali che descrivono come i vari elementi di un sistema WoT dovrebbero operare e cooperare tra loro.
+	Il principio della modularità è cruciale: favorisce il riutilizzo di componenti standardizzati, semplifica enormemente la progettazione, l'implementazione e la manutenzione dei sistemi complessi. Di conseguenza, riduce la complessità generale delle soluzioni e i costi associati alla formazione del personale, che potrà concentrarsi su concetti e interfacce standard piuttosto che imparare ogni volta da zero nuove logiche proprietarie.
+
+L'architettura astratta del WoT definisce, quindi, un framework concettuale di base.
+	Questo framework è stato progettato per poter essere mappato su una vasta gamma di scenari di deployment concreti e la specifica fornisce anche diversi esempi pratici per illustrare questa flessibilità.
+	Questo significa che, pur essendo di alto livello e concettuale, l'architettura offre una guida pratica e robusta per l'implementazione in contesti e con tecnologie differenti, garantendo al tempo stesso coerenza e interoperabilità tra soluzioni anche molto diverse tra loro.
+
+È fondamentale sottolineare che questa architettura non definisce meccanismi concreti né prescrive implementazioni specifiche o tecnologie particolari.
+	Non ci dice quale linguaggio di programmazione usare, quale software specifico adottare o quale hardware acquistare, ma piuttosto quali principi e pattern seguire per costruire sistemi interoperabili.
+	Fornisce una base comune e agnostica rispetto alla tecnologia per lo sviluppo, permettendo grande flessibilità nella scelta degli strumenti e promuovendo l'innovazione, pur mantenendo un alto grado di compatibilità e standardizzazione a livello concettuale.
+	Questo approccio "agnostico" è particolarmente vantaggioso per la riduzione dei costi di formazione, poiché l'apprendimento si concentra sui principi architetturali e sui concetti di integrazione piuttosto che su dettagli effimeri di strumenti specifici che possono cambiare rapidamente.
+
+Il link in fondo alla slide (https://www.w3.org/TR/wot-architecture/) rimanda alla specifica ufficiale del W3C sull'architettura WoT. È una risorsa preziosa per chiunque desideri consultare il documento originale per un approfondimento tecnico.
+
+--- Slide 10 ---
+Il Web of Things, o WoT, è un'iniziativa fondamentale che mira a migliorare due aspetti cruciali dell'Internet of Things (IoT): l'interoperabilità e l'usabilità.
+   Sappiamo che oggi l'IoT è caratterizzato da una grande frammentazione. Esistono molti produttori con standard proprietari differenti e una scarsa capacità dei dispositivi di diverse marche di "dialogare" tra loro senza complessi adattamenti. Il WoT cerca di superare queste barriere, rendendo i dispositivi IoT più accessibili e facili da integrare, proprio come lo sono le risorse del World Wide Web.
+
+   Questo risultato non è stato raggiunto da un giorno all'altro, ma è il frutto di anni di collaborazione tra numerosi attori e organizzazioni all'interno del World Wide Web Consortium (W3C), l'ente che definisce gli standard del web. Questo sforzo congiunto ha permesso di identificare i "blocchi fondamentali" necessari per affrontare le sfide dell'IoT.
+
+   La standardizzazione W3C WoT si concentra proprio su questi blocchi costruttivi e sull'architettura astratta che ne definisce le relazioni. Non stiamo reinventando l'IoT da zero, ma piuttosto fornendo un livello superiore che rende i dispositivi IoT esistenti e futuri "web-friendly". Questo significa applicare i principi, le tecnologie e l'ubiquità del web all'Internet delle Cose.
+
+   I documenti del W3C descrivono e definiscono diversi elementi chiave che costituiscono questo framework:
+
+      - Terminologia: Un linguaggio comune è essenziale per qualsiasi ambito tecnico. Definiamo i termini in modo univoco per evitare ambiguità e facilitare la comunicazione e lo sviluppo.
+
+      - Modelli Comuni (Common Patterns): Si tratta di soluzioni riutilizzabili per problemi ricorrenti nell'IoT. Ad esempio, come rappresentare in modo standardizzato un sensore di temperatura, un attuatore per l'illuminazione o un pulsante.
+
+      - Blocchi Costruttivi dell'Architettura (Architecture Building Blocks): Sono i componenti fondamentali che costituiscono un sistema WoT, definendo la sua struttura, i suoi principi operativi e le sue interazioni.
+
+      - Descrizioni delle Cose (Things Descriptions - TDs): Questo è un concetto centrale e uno dei pilastri del WoT. Ogni "Cosa" (un dispositivo IoT, un sensore, un attuatore, un servizio) può descrivere le proprie capacità, le sue proprietà (come un valore di temperatura o lo stato di un interruttore), le azioni che può eseguire (accendere/spegnere una luce, regolare una velocità) e gli eventi che può generare (temperatura troppo alta, rilevamento di movimento). Tutto questo viene fatto in un formato standardizzato e leggibile dalle macchine, tipicamente JSON-LD. È, in pratica, la "scheda tecnica" digitale e interoperabile di un dispositivo o servizio IoT.
+
+      - Modelli di Binding (Binding Templates): Questi modelli definiscono come una Things Description si connette ai protocolli di comunicazione sottostanti. Possiamo avere binding per protocolli web come HTTP, ma anche per protocolli IoT come CoAP, MQTT, WebSockets e molti altri. Questo decoupling è estremamente potente perché permette di definire una volta le capacità di un dispositivo (nella TD) e poi di collegarlo a diversi protocolli di trasporto senza dover modificare la descrizione stessa, garantendo massima flessibilità.
+
+      - API di Scripting (Scripting API): Per gli sviluppatori, è fondamentale poter interagire con le "Cose" WoT in modo programmatico e semplice. Le API di scripting forniscono un'interfaccia standard per farlo da applicazioni web, browser o script lato server, facilitando l'integrazione e lo sviluppo di applicazioni innovative.
+
+      - Linee Guida per Sicurezza e Privacy (Security & Privacy Guidelines): Poiché l'IoT spesso coinvolge dati sensibili o infrastrutture critiche, la sicurezza e la privacy sono aspetti irrinunciabili e devono essere considerati fin dalla progettazione. Queste linee guida forniscono indicazioni e raccomandazioni su come proteggere i sistemi e i dati gestiti dalle "Cose" WoT.
+
+      - Casi d'Uso (Use Cases): Infine, i casi d'uso mostrano esempi reali e concreti di come il WoT può essere applicato in vari settori – dalla smart home all'industria 4.0, dalla sanità alla smart city – evidenziandone i benefici e il valore aggiunto in termini di semplificazione e integrazione.
+
+--- Slide 11 ---
+W3C WoT - Terminologia (Concetti Principali)
+
+	La slide che vedete presenta i concetti fondamentali del Web of Things (WoT) definiti dal W3C. Comprendere questa terminologia è cruciale per chiunque voglia operare o anche solo valutare soluzioni nell'ambito IoT, poiché il WoT mira a semplificare l'integrazione e l'interoperabilità dei dispositivi connessi.
+
+	Ogni termine qui rappresenta un mattone per costruire un ecosistema IoT più standardizzato e facile da gestire.
+
+●	**WoT Thing Description (TD):**
+	La Thing Description, o TD, è forse il concetto più importante.
+	Immaginate una TD come la "carta d'identità" o il "manuale utente" standardizzato di un qualsiasi dispositivo o servizio IoT, che chiamiamo "Thing".
+	È un documento strutturato, spesso in formato JSON, che descrive in modo completo cosa sia un oggetto IoT, quali siano le sue funzionalità e come ci si possa interagire.
+
+	Al suo interno, una TD contiene:
+	  *	**Metadati generali:** Informazioni di base come il nome del dispositivo, il produttore, una descrizione, ecc.
+	  *	**Metadati specifici del dominio:** Informazioni più dettagliate rilevanti per il settore in cui opera il dispositivo, ad esempio, per un sensore di temperatura potrebbe indicare l'unità di misura.
+	  *	**Interaction Affordances:** Sono le "capacità di interazione" del dispositivo. Descrivono le sue proprietà (i dati che può fornire o ricevere), le sue azioni (i comandi che può eseguire) e gli eventi (le notifiche che può inviare).
+	  *	**Protocol Bindings:** Indicano quali protocolli di comunicazione specifici (come HTTP, MQTT, CoAP) il dispositivo supporta per ciascuna delle sue capacità di interazione, e come utilizzare questi protocolli.
+	  *	**Link a Thing correlate:** Permette di collegare una Thing ad altre, creando una rete di relazioni.
+
+	La TD è il cuore del W3C WoT perché standardizza la descrizione delle capacità di un dispositivo, riducendo drasticamente il tempo e il costo necessari per integrare nuovi dispositivi in un sistema esistente. Invece di dover imparare un nuovo modo di interagire per ogni produttore o modello, la TD fornisce un'interfaccia uniforme.
+
+●	**Binding Templates:**
+	I Binding Templates sono come dei modelli riutilizzabili.
+	Pensateli come un insieme di "istruzioni di montaggio" o "schemi di cablaggio" generici per collegare le capacità astratte di una Thing (le sue Interaction Affordances, come descritte nella TD) ai messaggi concreti e specifici di diverse piattaforme IoT o protocolli.
+	In pratica, colmano il divario tra la descrizione teorica di un dispositivo e la sua implementazione pratica su un sistema.
+	Forniscono dettagli su come mappare le interazioni e includono note sull'implementazione degli stack di protocollo o dei driver di comunicazione richiesti.
+	L'obiettivo è ridurre la complessità e il costo di sviluppo, permettendo agli sviluppatori di riutilizzare queste "ricette" per l'integrazione, anziché doverle riscrivere ogni volta da zero per ogni nuova piattaforma.
+
+●	**Consumed Thing:**
+	Una Consumed Thing è un'astrazione software che rappresenta un dispositivo o servizio IoT *remoto*.
+	Quando la vostra applicazione locale vuole interagire con un sensore o un attuatore che si trova fisicamente da un'altra parte, non interagisce direttamente con il hardware.
+	Invece, interagisce con questa "rappresentazione virtuale" locale, la Consumed Thing.
+	Questa astrazione può essere creata da un ambiente di esecuzione WoT (WoT Runtime) oppure istanziata come un oggetto tramite le API di scripting WoT.
+	Il beneficio qui è che lo sviluppatore dell'applicazione non deve preoccuparsi dei dettagli della comunicazione sottostante o della logica specifica del dispositivo remoto; interagisce con un'interfaccia standardizzata e semplificata. Questo riduce i costi di sviluppo e la curva di apprendimento.
+
+●	**Consuming a Thing:**
+	"Consumare una Thing" è l'atto di prendere una Thing Description (il "manuale utente" del dispositivo) e di processarla per creare quella Consumed Thing, l'astrazione software di cui abbiamo appena parlato.
+	È il processo attraverso cui un'applicazione locale rende "utilizzabile" e "interagibile" un dispositivo IoT remoto.
+	Questo processo automatizzato di parsing e creazione dell'interfaccia semplifica enormemente l'integrazione di nuovi dispositivi, eliminando la necessità di configurazioni manuali complesse e soggette ad errori, con un impatto positivo sui costi di integrazione e manutenzione.
+
+●	**Exposed Thing:**
+	Una Exposed Thing è l'esatto contrario di una Consumed Thing.
+	È un'astrazione software che rappresenta un dispositivo o servizio IoT che è *ospitato localmente* e che può essere *accessibile* da applicazioni remote (i "Consumer").
+	Se, per esempio, avete un sensore connesso localmente al vostro gateway, e volete che altre applicazioni in rete possano leggerne i dati o controllarlo, creerete una Exposed Thing.
+	Anche questa astrazione può essere generata da un WoT Runtime o tramite API di scripting.
+	L'Exposed Thing espone le capacità del dispositivo locale in un modo standardizzato (tramite la sua TD), permettendo ad altri di scoprirlo e utilizzarlo facilmente, senza bisogno di conoscere i dettagli della sua implementazione locale. Questo favorisce la creazione di ecosistemi di servizi e riduce le barriere all'interoperabilità tra dispositivi diversi.
+
+●	**Thing Directory:**
+	Immaginate una Thing Directory come una "rubrica telefonica" o un "motore di ricerca" per le Thing Descriptions.
+	È un servizio che fornisce un'interfaccia web per registrare le TD e per ricercarle.
+	Senza una Thing Directory, trovare un dispositivo IoT specifico o un servizio disponibile nella rete sarebbe come cercare un ago in un pagliaio.
+	Le Thing Directory permettono di pubblicizzare le proprie Thing e di scoprire quelle disponibili, utilizzando query come quelle di SPARQL o interfacce di lookup.
+	Questo servizio è fondamentale per la scalabilità delle soluzioni IoT. Riduce drasticamente i costi operativi legati alla scoperta e all'integrazione di nuovi dispositivi, specialmente in ambienti con un gran numero di Things. È un abilitatore chiave per l'autodiscovery e l'integrazione dinamica.
+
+●	**E non è finita…:**
+	Il Web of Things è un campo in continua evoluzione. Questi sono i concetti principali, ma la specifica è ampia e in continuo sviluppo per affrontare nuove sfide e opportunità nell'integrazione IoT. Mantenere l'aggiornamento è parte del costo della formazione continua, ma è essenziale per sfruttare al meglio queste tecnologie.
+
+--- Slide 12 ---
+Introduzione ai "Modelli Comuni" nel Web of Things (WoT)
+
+	 Questi modelli sono essenziali per visualizzare e comprendere le diverse modalità in cui i dispositivi nel Web of Things, ovvero gli 'oggetti', comunicano tra loro e con altri sistemi.
+	 Immaginate scenari in cui un sensore deve parlare con un server, oppure un attuatore deve ricevere comandi da un controller, o ancora due dispositivi che scambiano informazioni direttamente.
+	 I 'common patterns' ci forniscono degli schemi riutilizzabili per descrivere queste interazioni in modo chiaro e standardizzato.
+
+Concetto di Ruolo Client e Ruolo Server
+
+	 Per capire meglio queste interazioni, introduciamo i concetti di 'client' e 'server', ma in un contesto leggermente diverso da quello a cui potreste essere abituati (ad esempio, un browser come client e un sito web come server).
+	 Nel contesto dei protocolli di trasporto, il **ruolo di client** è assunto da chi *inizia* una comunicazione, chi invia la prima richiesta o il primo messaggio per stabilire una connessione.
+	 Al contrario, il **ruolo di server** è assunto da chi *aspetta* passivamente di ricevere una richiesta o un messaggio e poi risponde.
+	 È importante sottolineare che un singolo dispositivo può ricoprire entrambi i ruoli contemporaneamente o in momenti diversi, a seconda del flusso di comunicazione.
+
+Esempio di Doppio Ruolo: Un Sensore e un Servizio Cloud
+
+	 Consideriamo l'esempio di un sensore di temperatura che deve inviare dati a un servizio cloud:
+		 Quando il sensore si accende, deve prima 'registrarsi' con il servizio cloud, quindi *inizia* una connessione e invia le sue credenziali o informazioni. In questo momento, il sensore è in **ruolo di client**.
+		 Successivamente, il sensore invia regolarmente le sue letture di temperatura al cloud. Anche qui, *inizia* l'invio dei dati, quindi è ancora un **client**.
+		 Tuttavia, il servizio cloud, nella risposta a questi messaggi (o in un messaggio separato che il sensore è predisposto ad ascoltare), potrebbe inviare delle istruzioni.
+		 Ad esempio, potrebbe dire al sensore: 'Invia i dati ogni 10 minuti invece che ogni minuto', oppure 'Ora invia solo la temperatura e non l'umidità'.
+		 Il sensore, ricevendo e *reagendo* a queste istruzioni, si comporta da **server**, perché sta rispondendo a una 'richiesta' (anche se è incapsulata in una risposta) proveniente dal cloud.
+		 Questo chiarisce come un singolo dispositivo possa passare tra i ruoli di client e server, o assumere entrambi contemporaneamente in diverse fasi o per diversi flussi di comunicazione.
+
+Scopo dei Modelli Comuni
+
+	 I modelli che vedremo in seguito sono pensati per mostrarci come questi ruoli di client e server si combinano per realizzare compiti specifici e coprire diversi casi d'uso.
+	 Partiremo da scenari semplici per poi affrontare situazioni via via più complesse, costruendo una comprensione progressiva delle interazioni nel WoT.
+
+Obiettivo dei Modelli Comuni W3C WoT
+
+	 È importante capire che questi modelli non coprono *tutte* le possibili interazioni, ma sono stati scelti per illustrare i principi fondamentali e per fornire una base solida.
+	 Il loro scopo principale è 'motivare', cioè spiegare perché l'approccio W3C WoT è utile, e 'supportare', cioè fornire gli strumenti concettuali per capire come sono costruiti i diversi componenti dell'architettura WoT.
+
+--- Slide 13 ---
+	Parliamo di uno dei pattern fondamentali del W3C Web of Things (WoT): i controllori di dispositivi. Questo schema descrive come i dispositivi intelligenti possono essere controllati e come interagiscono all'interno di una rete locale.
+
+
+	Il primo caso d'uso che analizziamo in questo contesto riguarda un dispositivo locale, come un elettrodomestico intelligente, un sensore ambientale o un attuatore (ad esempio, un interruttore smart), che viene controllato da un'interfaccia remota. Questa interfaccia è gestita direttamente da un utente. Immaginate, per esempio, di controllare l'accensione e lo spegnimento delle luci di casa, la regolazione del termostato, o l'apertura e chiusura di una serratura intelligente tramite un'applicazione sul vostro smartphone o tablet. Questo scenario base è la fondamenta di molti sistemi di casa intelligente o di automazione industriale locale.
+
+
+	Questo controller remoto può accedere direttamente all'apparecchio elettronico target tramite la rete locale, tipicamente la rete domestica o aziendale. Non sempre è necessario passare per un servizio cloud esterno o intermediario. Questo approccio diretto può offrire vantaggi significativi in termini di privacy, poiché i dati possono rimanere all'interno della rete locale, e di latenza, dato che la comunicazione è più rapida e meno soggetta a interruzioni esterne. Il controller stesso può essere implementato in diverse forme: come un'applicazione web accessibile da un browser (che non richiede installazione) oppure come un'applicazione nativa installata direttamente su un dispositivo mobile come uno smartphone o un tablet, offrendo spesso un'esperienza utente più integrata.
+
+
+	In questo pattern, il dispositivo che viene controllato, ad esempio l'elettrodomestico o il sensore, assume il ruolo di server. Questo significa che è progettato per mettersi in ascolto e accettare richieste provenienti da altri dispositivi, per poi elaborarle e fornire una risposta. Molto spesso, in risposta a queste richieste, il dispositivo esegue un'azione fisica o "meccanica" (come accendere un motore, aprire una valvola) oppure modifica il suo stato interno (ad esempio, cambia la sua configurazione, regola la luminosità di una lampada o memorizza un nuovo parametro). È il punto finale dell'interazione che esegue il lavoro richiesto.
+
+
+	L'altro dispositivo coinvolto, quello che abbiamo chiamato "controller remoto" (lo smartphone con l'applicazione, o il tablet), ricopre il ruolo di client. È il client che avvia la comunicazione, inviando messaggi che contengono le richieste al server (il dispositivo controllato). Queste richieste possono essere di varia natura: possono essere semplici domande per "leggere" il valore attuale di un sensore (ad esempio, qual è la temperatura corrente, o il livello di umidità), oppure comandi più diretti per "attivare" o "disattivare" una funzionalità del dispositivo, o per modificare un parametro operativo.
+
+
+	Oltre a queste interazioni client-server in cui il controller interroga il dispositivo, c'è un'altra dinamica importante. Per comunicare in modo proattivo il proprio stato attuale o per notificare il verificarsi di eventi specifici (ad esempio, "la batteria è scarica", "il sensore ha rilevato movimento", "il ciclo di lavaggio è terminato", "la temperatura ha superato una soglia di allerta"), il dispositivo stesso può assumere, a sua volta, un ruolo di client. In questo scenario, è il dispositivo che invia un messaggio a un altro sistema o dispositivo, il quale assume il ruolo di server ed è configurato per ricevere ed elaborare queste notifiche o "eventi". Questo permette un monitoraggio proattivo e una maggiore reattività dell'intero sistema, consentendo al controller, a un sistema di monitoraggio centrale o ad altri dispositivi di sapere in tempo reale cosa sta accadendo senza dover interrogare continuamente il dispositivo.
+
+--- Slide 14 ---
+Questo pattern, denominato "Thing to Thing" (o "Cosa a Cosa"), è uno dei modelli fondamentali definiti dal W3C per il Web of Things.
+    Descrive una modalità di interazione diretta tra due o più dispositivi, o "Things", senza un intermediario centrale pesante come un server cloud dedicato per ogni singola transazione.
+    È un concetto chiave per capire come i dispositivi possono collaborare in modo autonomo, il che ha implicazioni dirette sulla robustezza del sistema e sui requisiti di latenza.
+    Comprendere questa interazione diretta è essenziale per la progettazione di sistemi distribuiti e per la definizione delle competenze richieste per lo sviluppo e la manutenzione.
+
+    Consideriamo uno scenario pratico per illustrare meglio questo pattern.
+
+        Immaginate un sensore, per esempio, un sensore di temperatura o di umidità, all'interno di una stanza.
+
+        Questo sensore rileva un cambiamento nella condizione ambientale della stanza. Ad esempio, la temperatura supera una soglia predefinita, o l'umidità scende al di sotto di un certo livello.
+
+        Una volta rilevata questa condizione, il sensore non invia il dato a un server centrale per l'elaborazione, bensì invia direttamente un messaggio di controllo a un altro apparecchio elettronico. Potrebbe essere un condizionatore, un riscaldatore o un deumidificatore. Il messaggio sarà qualcosa come "accendi" o "modifica la potenza".
+        Questa interazione diretta riduce la dipendenza da infrastrutture esterne e può migliorare la reattività del sistema, ma richiede una comprensione chiara dei protocolli di comunicazione tra i dispositivi.
+
+    È importante notare che l'unità sensore non è limitata a interagire con un singolo dispositivo.
+        Può inviare messaggi "trigger" – cioè messaggi che attivano una funzione – a più dispositivi contemporaneamente.
+        Pensiamo a un sensore di fumo che, una volta attivato, non solo attiva un allarme acustico, ma invia anche un segnale a un sistema di ventilazione per bloccare il ricircolo dell'aria e magari ad un sistema di luci per indicare l'uscita più vicina.
+        Questa capacità di coordinamento diretto tra più attuatori, basata su un singolo evento trigger, è un esempio potente del pattern Thing to Thing e sottolinea la necessità di definire interfacce standardizzate.
+
+    A livello di architettura e comunicazione, c'è un aspetto cruciale da considerare quando i dispositivi interagiscono direttamente.
+        Quando due dispositivi, entrambi configurati per offrire servizi (ovvero, hanno un "ruolo di server" nel contesto della comunicazione WoT, esponendo le proprie capabilities), necessitano di comunicare tra loro, almeno uno dei due deve anche assumere un "ruolo di client".
+
+        Questo significa che, se il sensore è un "server" che espone la sua lettura di temperatura, e il condizionatore è un "server" che espone le sue funzioni di accensione/spegnimento, per far sì che il sensore comandi il condizionatore, il sensore deve anche agire da "client".
+        Il sensore, in quanto client, dovrà quindi inviare un messaggio specifico – una richiesta HTTP, un comando MQTT, ecc. – al "server" condizionatore per attivare una sua funzione (actuate) o per inviare una notifica (notify).
+
+        Comprendere queste dinamiche di ruoli client e server è fondamentale per la progettazione e l'implementazione di sistemi WoT interoperabili e per la formazione del personale che dovrà sviluppare o gestire queste soluzioni. La mancanza di chiarezza su questi ruoli può portare a complessità nella programmazione, errori di comunicazione e maggiori costi di debugging.
+        È essenziale distinguere tra la capacità di un dispositivo di esporre dati o funzioni (server role) e la sua capacità di consumare i dati o le funzioni di un altro dispositivo (client role).
+
+--- Slide 15 ---
+La slide che abbiamo davanti introduce il concetto di "Remote Access" (Accesso Remoto) nell'ambito del Web of Things (WoT) del W3C. Si tratta di un pattern, ovvero un modello di soluzione collaudato per un problema ricorrente. Qui, si descrive come un controller possa accedere e gestire un dispositivo IoT da lontano.
+
+       Il primo punto evidenzia la flessibilità del controller remoto nel cambiare connessione.
+       Pensate al vostro smartphone: può passare senza problemi da una rete cellulare (4G o 5G) a una rete Wi-Fi domestica o, in alcuni casi, utilizzare anche il Bluetooth per interagire con i dispositivi.
+       Questa capacità di passare tra diverse tecnologie e protocolli di rete è cruciale per mantenere una connettività continua, indipendentemente dalla posizione fisica del controller.
+
+       Il secondo aspetto riguarda la fiducia nella rete locale.
+       Quando il controller si trova all'interno della stessa rete del dispositivo che deve controllare – ad esempio, se entrambi sono connessi alla vostra rete Wi-Fi di casa – viene considerato un dispositivo "affidabile".
+       In questi casi, generalmente, non sono richieste ulteriori misure di sicurezza a livello di rete o di controllo degli accessi specifiche per la comunicazione, poiché ci si affida ai meccanismi di sicurezza già implementati sulla rete locale stessa.
+
+       Il terzo punto affronta la situazione opposta, quella in cui il controller si trova al di fuori della rete considerata affidabile.
+       Immaginate di voler controllare un dispositivo a casa vostra mentre siete fuori, usando la connessione dati del vostro cellulare.
+       In questo scenario, diventano indispensabili meccanismi aggiuntivi di controllo degli accessi e di sicurezza per garantire che la relazione tra il controller e il dispositivo rimanga sicura e affidabile.
+       È fondamentale considerare che la connettività del controller può essere dinamica: può passare da un punto di accesso Wi-Fi pubblico a una stazione base cellulare diversa, e questo richiede una gestione della sicurezza robusta e adattiva.
+
+       Infine, viene delineato il ruolo classico di "client" e "server" in questo pattern.
+       Il controller remoto, che avvia le richieste o invia i comandi (ad esempio, accendere o spegnere una luce), agisce come "client".
+       L'elettrodomestico o il dispositivo IoT che riceve e risponde a queste richieste (ad esempio, la lampadina intelligente che si accende o spegne) assume il ruolo di "server".
+       Questa è una distinzione fondamentale per comprendere l'architettura della comunicazione in questo tipo di interazione remota.
+
+--- Slide 16 ---
+Il tema di questa slide riguarda un pattern specifico nel contesto del Web of Things (WoT) del W3C, focalizzato sullo Smart Home Gateway.
+
+  Il gateway, in questo contesto, è un componente fondamentale. Si posiziona strategicamente tra una rete locale, come quella della vostra casa o ufficio, e Internet. La sua funzione principale è fare da ponte e da punto di controllo, fungendo da intermediario per tutte le comunicazioni.
+
+  Gestisce una varietà di dispositivi elettronici all'interno dell'ambiente domestico o aziendale. Questo significa che può comunicare con lampadine intelligenti, termostati, sensori, elettrodomestici e molto altro, centralizzando il controllo. Non solo, ma è anche in grado di ricevere comandi da un controller remoto tramite Internet. Immaginate di poter controllare il riscaldamento di casa o di accendere le luci mentre siete fuori, usando semplicemente il vostro smartphone. Questo è reso possibile proprio dal gateway, che traduce i comandi esterni in azioni locali e viceversa.
+
+  Un aspetto importante è che il gateway non è solo un dispositivo fisico. È anche una rappresentazione virtuale dei vari device collegati. Questo è cruciale per l'interoperabilità e la gestione centralizzata, permettendo al sistema di trattare i dispositivi fisici come entità software. Tipicamente, uno Smart Home Gateway offre funzionalità essenziali di sicurezza e rete come quelle di proxy e firewall:
+      Come un proxy, può intermediare le comunicazioni, rendendole più efficienti e controllate, ad esempio filtrando il traffico o gestendo l'autenticazione.
+      Come un firewall, protegge la rete interna da accessi non autorizzati e minacce provenienti da Internet, agendo come una barriera protettiva che monitora e blocca il traffico sospetto.
+  Questo aggiunge un livello di sicurezza fondamentale per i dati e i dispositivi connessi, un aspetto sempre più critico nell'era dell'IoT.
+
+  In questo pattern, il gateway domestico non si limita a un singolo ruolo. Opera sia come client che come server, a seconda della direzione e del tipo di comunicazione. Questa sua dualità è un concetto chiave per comprendere la sua flessibilità e potenza operativa.
+
+  Vediamo un esempio pratico. Quando un controller remoto, come il vostro smartphone, invia un comando per azionare un elettrodomestico – diciamo, per accendere il condizionatore – il gateway assume un doppio ruolo:
+      Da un lato, agisce come 'client' per connettersi e comunicare con l'elettrodomestico specifico all'interno della rete locale. È il gateway che 'chiede' all'elettrodomestico di eseguire un'azione.
+      Dall'altro lato, agisce come 'server' per il controller remoto che ha inviato il comando. È il gateway che 'serve' la richiesta ricevuta dal controller, accettandola e inoltrandola all'interno della rete locale.
+  Questo meccanismo permette una gestione fluida e sicura delle interazioni da remoto, garantendo che i comandi vengano ricevuti e consegnati correttamente.
+
+  L'opposto avviene quando è l'elettrodomestico a dover inviare un messaggio al controller remoto. Immaginate un sensore di temperatura che rileva un valore e deve comunicarlo all'applicazione sul vostro smartphone:
+      In questo caso, il gateway agisce come 'server' per l'elettrodomestico. L'elettrodomestico invia il dato al gateway, che lo 'riceve' e lo elabora come un server.
+      Successivamente, il gateway agisce come 'client' per il controller remoto, prendendo il dato ricevuto e inviandolo al dispositivo remoto, che sia il vostro smartphone o un'applicazione cloud.
+  Questo scambio di ruoli è fondamentale per consentire una comunicazione bidirezionale e dinamica, permettendo non solo il controllo, ma anche la raccolta di dati e il monitoraggio da parte dei dispositivi smart.
+
+--- Slide 17 ---
+Gli Edge Device, o Edge Gateway, rappresentano un componente chiave nelle architetture IoT moderne.
+
+    Concettualmente, un Edge Device può essere paragonato a un Smart Home Gateway.
+    Pensate al dispositivo che a casa vostra connette sensori e attuatori intelligenti alla vostra rete locale e a Internet. L'idea è simile: un punto centrale che gestisce la comunicazione tra dispositivi locali e una rete più ampia.
+
+    Tuttavia, il termine "Edge Device" viene utilizzato per indicare che questi dispositivi non si limitano a una semplice funzione di ponte.
+    Essi svolgono compiti aggiuntivi e più complessi, che vanno ben oltre la mera trasmissione di dati.
+
+    Mentre un gateway di rete tradizionale fa principalmente da ponte tra la vostra rete interna – che potremmo definire fidata – e la rete esterna, come Internet, un Edge Device ha capacità di calcolo locali significative.
+        Questo significa che è in grado di elaborare i dati direttamente sul posto, senza doverli inviare necessariamente a un server remoto o al cloud per ogni singola operazione.
+        Un aspetto cruciale è la loro capacità di fare da ponte tra protocolli diversi.
+        Nel contesto industriale, ad esempio, ci sono moltissimi dispositivi che comunicano utilizzando linguaggi specifici e talvolta proprietari, o protocolli legacy. L'Edge Device è in grado di "tradurre" questi protocolli in standard più moderni e aperti, rendendo i dati interoperabili e accessibili al resto del sistema.
+
+    Gli Edge Device trovano la loro applicazione più vantaggiosa e diffusa in contesti industriali, ma anche in altre aree dove la quantità di dati generati è enorme e l'esigenza di risposte rapide è elevata.
+        In queste soluzioni, gli Edge Device possono fornire funzioni fondamentali come:
+
+        Pre-elaborazione (Preprocessing):
+            Trasformano i dati grezzi ricevuti dai sensori in informazioni più significative e utilizzabili.
+            Ad esempio, possono convertire un segnale elettrico grezzo in una lettura di temperatura in gradi Celsius o in una misura di pressione.
+
+        Filtraggio (Filtering):
+            Eliminano dati ridondanti, non significativi o fuori dal range di normalità.
+            Questo riduce drasticamente il volume di dati che devono essere inviati a livelli superiori dell'architettura (come il cloud), minimizzando i costi di banda e archiviazione.
+
+        Aggregazione (Aggregation):
+            Raggruppano più dati in una singola informazione sintetica.
+            Invece di inviare singolarmente cento letture di temperatura al secondo da un sensore, l'Edge Device può calcolare la media di queste letture e inviarla una volta al minuto. Questo ottimizza ulteriormente il traffico di rete e i costi di elaborazione.
+            Queste capacità sono vitali per migliorare l'efficienza operativa, ridurre la latenza e aumentare la sicurezza delle soluzioni IoT e IIoT.
+
+--- Slide 18 ---
+Un gemello digitale è una rappresentazione virtuale, una sorta di "copia digitale" di un dispositivo fisico o di un gruppo di dispositivi.
+	Questa copia digitale non risiede sul dispositivo stesso, ma tipicamente su un server cloud o, in alcuni casi, su un dispositivo "edge", cioè più vicino alla fonte dei dati.
+	Immaginate un gemello digitale come un modello software che riproduce il comportamento, lo stato e le caratteristiche del suo corrispettivo fisico.
+
+Il suo scopo principale è duplice.
+	Può rappresentare dispositivi del mondo reale che potrebbero non essere continuamente connessi alla rete. Pensate a sensori che trasmettono dati solo a intermittenza: il gemello digitale può mantenere uno stato aggiornato e disponibile anche quando il dispositivo reale è offline.
+	Un altro uso fondamentale è la possibilità di eseguire simulazioni. Possiamo testare nuove applicazioni o servizi su questo modello virtuale prima di implementarli sui dispositivi reali. Questo riduce i rischi, i costi di sviluppo e permette di identificare problemi in un ambiente controllato, senza impattare sull'operatività del sistema fisico.
+	Per un'azienda, ad esempio, simulare l'impatto di un aggiornamento software su una linea di produzione virtuale prima di applicarlo a quella reale può far risparmiare tempo e risorse.
+
+La flessibilità dei gemelli digitali è notevole.
+	Possono modellare un singolo dispositivo, come una singola macchina industriale o un sensore specifico.
+	Oppure, e questo è un aspetto molto potente, possono aggregare più dispositivi. Immaginate un intero sistema complesso, come una fabbrica, un edificio intelligente, o persino una città. Un gemello digitale può fornire una rappresentazione virtuale unificata che integra dati e comportamenti di molteplici componenti interagenti. Questo permette una visione olistica e una gestione più efficace dell'intero ecosistema.
+
+Come vengono realizzati tecnicamente? Ci sono diverse modalità.
+	La realizzazione dipende da come il dispositivo fisico è connesso.
+	Se un dispositivo è direttamente connesso al cloud, ad esempio tramite Wi-Fi o una rete cellulare, i dati possono essere inviati direttamente per aggiornare il suo gemello digitale.
+	Tuttavia, molto spesso, i dispositivi meno recenti o quelli che utilizzano protocolli di comunicazione specifici (ad esempio in ambito industriale) non sono direttamente collegabili al cloud. In questi casi, un dispositivo chiamato "gateway" funge da intermediario. Il gateway raccoglie i dati dai dispositivi locali e poi li trasmette al cloud, dove il gemello digitale viene aggiornato.
+	Questo approccio garantisce la compatibilità e la connettività anche per sistemi legacy, rendendo la tecnologia dei gemelli digitali applicabile in un'ampia varietà di scenari industriali e commerciali.
+
+--- Slide 19 ---

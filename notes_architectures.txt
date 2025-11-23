@@ -1,0 +1,182 @@
+--- Slide 1 ---
+Anno Accademico 2024/2025.
+
+Il presente corso si focalizza su "IoT Architectures End to End Design" e "Intelligent Internet of Things".
+
+La dicitura "End to End Design" sottolinea l'approccio olistico che adotteremo. Analizzeremo le architetture IoT nella loro totalità, partendo dai sensori e attuatori, attraverso le reti di comunicazione e le piattaforme edge, fino all'infrastruttura cloud, all'analisi dei dati e alle applicazioni finali. Non ci limiteremo a singoli componenti, ma ne esamineremo l'integrazione e l'interazione per costruire sistemi robusti e scalabili. Questo approccio è cruciale per comprendere la complessità e le interdipendenze tra i diversi strati di un sistema IoT, un aspetto fondamentale per la pianificazione dei costi e delle risorse.
+
+L'espressione "Intelligent Internet of Things" evidenzia l'evoluzione dell'IoT verso sistemi più autonomi e predittivi. Qui esploreremo come l'intelligenza artificiale, l'apprendimento automatico e l'analisi avanzata dei dati vengano impiegati per migliorare l'efficienza, la sicurezza e la funzionalità dei dispositivi e delle reti IoT, trasformando i dati grezzi in intuizioni azionabili e decisioni automatizzate. Questo aggiunge un ulteriore strato di valore, ma anche di complessità, che influenza direttamente le competenze richieste e gli investimenti necessari.
+
+Il corso sarà tenuto dal Professor Marco Picone.
+
+--- Slide 2 ---
+Il tema di questo corso è la progettazione end-to-end delle architetture IoT.
+
+	Quando parliamo di "end-to-end", intendiamo considerare l'intero percorso del dato e dell'interazione,
+	 dal sensore fisico che rileva l'informazione fino all'applicazione o al sistema che la utilizza e la presenta all'utente finale.
+	 Questo implica analizzare tutti i componenti: dispositivi, connettività, piattaforme cloud, analisi dei dati e interfacce utente.
+
+	Esamineremo diversi scenari applicativi, ognuno con le sue specificità e sfide di progettazione.
+	 Questi esempi ci aiuteranno a capire come i principi generali delle architetture IoT si adattano a contesti diversi.
+
+	Il primo scenario che analizzeremo è quello dei **dispositivi per la salute personale**.
+		Qui pensiamo a wearable, smartwatch, monitor di parametri vitali come la glicemia o la pressione.
+		Le considerazioni principali in questo ambito sono il basso consumo energetico,
+		 la privacy dei dati sensibili e la sicurezza delle informazioni mediche,
+		 la facilità d'uso per l'utente finale e spesso la connettività diretta con uno smartphone o un'app mobile.
+		Le sfide includono la durata della batteria, la precisione dei sensori e la conformità alle normative mediche e regolatorie.
+
+	Il secondo scenario riguarda la **salute e lo sport** in un contesto più ampio.
+		Non solo dispositivi personali, ma anche attrezzature per palestre smart,
+		 sistemi di monitoraggio per atleti professionisti o per la gestione di squadre sportive.
+		Qui diventa cruciale l'elaborazione dei dati in tempo reale,
+		 la capacità di gestire più utenti e dispositivi simultaneamente,
+		 l'aggregazione di grandi volumi di dati e l'analisi delle performance.
+		La scalabilità, l'integrazione con sistemi esistenti e l'interpretazione dei dati per scopi di allenamento sono aspetti chiave.
+		Un altro punto rilevante è la necessità di bilanciare la precisione con l'invasività del dispositivo.
+
+	Il terzo scenario ci porta nel mondo dell'**telemetria industriale**.
+		Si tratta del monitoraggio di macchinari industriali, condizioni ambientali in fabbrica,
+		 o sistemi di misurazione per utenze (acqua, gas, elettricità) su larga scala.
+		Le esigenze qui sono robustezza dei dispositivi per operare in ambienti difficili,
+		 comunicazioni a lungo raggio (es. LoRaWAN, NB-IoT) per coprire vaste aree,
+		 affidabilità dei dati anche in condizioni avverse,
+		 capacità di supportare la manutenzione predittiva e il tracciamento degli asset.
+		Ambienti ostili, integrazione con sistemi legacy e sicurezza contro attacchi industriali o manomissioni sono sfide comuni.
+
+	Il quarto scenario è l'**implementazione di soluzioni IoT industriali all'edge**.
+		Questo va oltre la semplice telemetria; implica che i dati vengano elaborati il più vicino possibile alla fonte,
+		 cioè direttamente sui dispositivi o su server locali (edge devices),
+		 prima di essere inviati al cloud o ad altri sistemi.
+		Questo approccio riduce la latenza, ottimizza l'uso della banda di rete,
+		 aumenta la sicurezza perché meno dati sensibili lasciano la rete locale
+		 e permette decisioni rapide basate sui dati locali.
+		Le sfide riguardano la complessità dei dispositivi edge, che devono avere capacità computazionali,
+		 la gestione del software su larga scala e l'orchestrare le risorse computazionali spesso limitate all'edge.
+
+	Infine, il quinto scenario è quello degli **edifici intelligenti (Smart Building)**.
+		Questo include la domotica per le abitazioni, la gestione intelligente degli uffici (HVAC, illuminazione, sicurezza, controllo accessi)
+		 e la gestione dell'energia.
+		Gli obiettivi principali sono l'efficienza energetica, il comfort degli occupanti,
+		 la sicurezza e l'integrazione di vari sottosistemi (sensori, attuatori, controllori) per creare un ambiente coeso.
+		Le sfide principali sono l'interoperabilità tra dispositivi di produttori diversi e protocolli eterogenei,
+		 la privacy dei dati degli occupanti e la cybersecurity dell'intero sistema.
+
+--- Slide 3 ---
+Il tema centrale di questa sessione è la progettazione end-to-end delle architetture IoT.
+
+        Con "end-to-end" intendiamo un approccio che copre ogni aspetto dello sviluppo di una soluzione IoT.
+        Questo include tutto, partendo dai sensori e dai dispositivi fisici sul campo,
+        passando per la connettività, l'infrastruttura di rete, i protocolli di comunicazione,
+        le piattaforme cloud per l'elaborazione e lo storage dei dati,
+        l'analisi dei dati e le logiche applicative,
+        fino ad arrivare all'interfaccia utente finale, che può essere un'applicazione mobile o web.
+        L'obiettivo è garantire che tutti questi componenti lavorino insieme
+        in modo sinergico ed efficiente, dal "thing" all'utente.
+
+Inizieremo la nostra analisi pratica con il primo scenario: un dispositivo di salute personale.
+
+        Questo tipo di dispositivo è un ottimo esempio per comprendere
+        le sfide e le opportunità delle architetture IoT,
+        in quanto combina aspetti hardware, software, connettività,
+        e requisiti specifici legati alla gestione di dati sensibili,
+        come quelli sanitari, e alla conformità normativa (ad esempio, privacy).
+        Esploreremo come un dispositivo di questo tipo possa essere concepito,
+        sviluppato e gestito lungo l'intero ciclo di vita,
+        tenendo conto dei costi e dei benefici associati a ciascuna fase,
+        dalla prototipazione alla messa in produzione e manutenzione.
+
+--- Slide 4 ---
+Questo slide introduce il nostro primo scenario applicativo: un dispositivo di salute personale.
+
+	Immaginiamo un dispositivo indossabile o portatile che monitora parametri vitali o attività dell'utente.
+	L'obiettivo è comprendere come un sistema così composto possa generare costi di formazione, non solo per chi lo sviluppa, ma anche per chi lo gestisce o lo utilizza.
+
+**Componenti e Connettività:**
+
+	Il sistema si basa su una connettività **Internet** robusta, fondamentale per la trasmissione dei dati.
+		Questa connessione permette al dispositivo di comunicare con servizi remoti in modo affidabile e tempestivo.
+
+	I dati raccolti vengono inviati a un **Cloud**.
+		Il Cloud funge da infrastruttura per l'archiviazione sicura dei dati e per l'esecuzione di analisi complesse.
+		È qui che risiedono i server e i database che elaborano le informazioni provenienti dal dispositivo, garantendo scalabilità e accessibilità.
+
+	Abbiamo poi un **Health Service**, ovvero un servizio sanitario dedicato.
+		Questo componente interpreta i dati grezzi, trasformandoli in informazioni mediche significative.
+		Può essere un sistema di intelligenza artificiale per l'analisi predittiva o un'interfaccia per il personale medico per la revisione e la diagnosi.
+		Richiede formazione specifica per la sua configurazione, manutenzione e per l'interpretazione corretta dei suoi output.
+
+	Un **GeoSpatial Service** (servizio geospaziale) è spesso integrato.
+		Permette di tracciare la posizione dell'utente o del dispositivo tramite GPS.
+		Questo è cruciale per funzionalità come il rilevamento di cadute, la localizzazione in caso di emergenza o il monitoraggio delle attività fisiche all'aperto.
+
+**Dati Monitorati dal Dispositivo:**
+
+	Il dispositivo raccoglie una varietà di dati per fornire un quadro completo dello stato dell'utente e dell'ambiente circostante.
+
+	**GPS:** Per la localizzazione geografica precisa.
+		Essenziale per applicazioni di sicurezza (es. invio automatico della posizione in caso di allarme) o per monitorare percorsi e distanze nelle attività fisiche.
+
+	**Hearth-rate (Frequenza Cardiaca):** Un indicatore vitale fondamentale.
+		Monitora lo stato di salute cardiovascolare, rileva anomalie come aritmie o stati di stress elevato.
+		Questi dati possono essere usati per avvisi in tempo reale.
+
+	**Body Temperature (Temperatura Corporea):** Utile per rilevare stati febbrili, ipotermia o monitorare il recupero da malattie.
+
+	**Environment Temperature (Temperatura Ambientale):** Può influenzare le misurazioni del dispositivo o indicare rischi ambientali per l'utente, come il rischio di colpo di calore o ipotermia.
+
+	**Battery (Stato Batteria):** Essenziale per la gestione dell'autonomia e per garantire il funzionamento continuo del dispositivo.
+		Un avviso di batteria scarica è fondamentale per non interrompere il monitoraggio critico.
+
+	**ID_Device e ID_User (Identificativo Dispositivo e Utente):** Fondamentali per associare i dati all'utente corretto e per garantire la sicurezza e la privacy delle informazioni.
+		La corretta gestione di questi identificatori è cruciale per la conformità normativa, come il GDPR.
+
+	**Software_Version (Versione Software):** Permette di tracciare le funzionalità attive e gli aggiornamenti del dispositivo.
+		Importante per il supporto tecnico, la risoluzione di problemi e la distribuzione di nuove funzionalità o correzioni di bug.
+
+**Interazioni:**
+
+	Le **Push Notification** (notifiche push) sono il principale canale di comunicazione dal sistema verso l'utente.
+		Possono avvisare l'utente di anomalie riscontrate (es. frequenza cardiaca anomala), promemoria per l'assunzione di farmaci, o aggiornamenti sullo stato del sistema.
+		La configurazione efficace e l'ottimizzazione di queste notifiche sono aspetti chiave dell'usabilità e dell'efficacia complessiva del sistema.
+
+**Costi di Formazione Impliciti:**
+
+	Questo scenario evidenzia diversi ambiti in cui la formazione è indispensabile:
+	*   **Sviluppo e Manutenzione:** Formazione per ingegneri e sviluppatori su piattaforme Cloud, architetture di servizi sanitari, integrazione dati, sicurezza informatica e privacy.
+	*   **Supporto Tecnico:** Personale che deve comprendere il funzionamento del dispositivo, dell'applicazione mobile e dei servizi backend per assistere efficacemente gli utenti finali.
+	*   **Personale Medico/Sanitario:** Formazione sull'interpretazione dei dati generati dal sistema, sull'uso delle interfacce del servizio sanitario e sull'integrazione di queste informazioni nei protocolli clinici.
+	*   **Utenti Finali:** Formazione (anche minima, tramite guide o tutorial) sull'uso corretto del dispositivo, sull'interpretazione delle notifiche e sulla gestione delle impostazioni di privacy.
+	*   **Sicurezza e Privacy:** Formazione continua per tutto il personale coinvolto su come gestire i dati sensibili in conformità con le normative vigenti e le migliori pratiche di sicurezza.
+
+--- Slide 5 ---
+Analizziamo il nostro primo scenario applicativo: un dispositivo per la salute personale.
+Questo esempio ci aiuterà a identificare quali competenze e, di conseguenza, quali costi di formazione potrebbero essere coinvolti nella gestione e nello sviluppo di soluzioni di telemedicina o monitoraggio della salute.
+
+	Al centro di questo sistema troviamo una serie di componenti interconnesse.
+	Il dispositivo si connette tramite Internet, che è il canale di comunicazione fondamentale.
+	I dati raccolti vengono poi inviati a un servizio Cloud. Il Cloud funge da infrastruttura di backend, occupandosi dell'archiviazione, dell'elaborazione e della gestione di tutte le informazioni.
+
+	All'interno del Cloud, operano diversi servizi specifici:
+		Un Health Service, ovvero un servizio sanitario, che si occupa della gestione dei dati medici e sanitari veri e propri, dell'analisi e della generazione di report o alert in base a soglie predefinite.
+		Un GeoSpatial Service, un servizio geospaziale, che è fondamentale per tracciare la posizione del dispositivo o dell'utente. Questo può essere utile per funzionalità di emergenza, per monitorare percorsi di attività fisica o per fornire servizi basati sulla localizzazione.
+
+	Il cuore del sistema è il Device Monitoring, ovvero il monitoraggio continuo fornito dal dispositivo stesso.
+	Questo dispositivo è progettato per raccogliere una varietà di dati, alcuni dei quali sono parametri vitali o informazioni critiche per l'utente e per il corretto funzionamento del sistema.
+
+	Tra i dati monitorati troviamo:
+		Il GPS, che ci fornisce la posizione geografica precisa.
+		La frequenza cardiaca (Hearth-rate), un parametro vitale fondamentale per la salute cardiovascolare.
+		La temperatura corporea (Body Temperature).
+		La temperatura dell'ambiente circostante (Environment Temperature), che può dare indicazioni sul contesto in cui si trova l'utente o sul funzionamento del dispositivo.
+		Lo stato della Batteria, essenziale per garantire la continuità del monitoraggio e l'autonomia del dispositivo.
+		L'ID del Dispositivo e l'ID dell'Utente, per l'identificazione univoca e la personalizzazione dei servizi.
+		La Versione del Software installato sul dispositivo, utile per la manutenzione, gli aggiornamenti e la risoluzione di eventuali problemi.
+
+	La raccolta, la trasmissione e l'analisi di questi dati richiedono competenze specifiche in aree come la sensoristica, l'ingegneria dei dati (data engineering), l'analisi statistica e la sicurezza informatica.
+
+	Per quanto riguarda la comunicazione e l'interazione con l'utente o con i caregiver, il sistema utilizza principalmente due meccanismi:
+		Le Push Notification, ovvero le notifiche push, che permettono al servizio cloud di inviare messaggi, alert o promemoria direttamente al dispositivo del paziente, a uno smartphone associato o ad altri dispositivi di caregiver in tempo reale.
+		La Telemetria Remota (Remote Telemetry), spesso combinata anch'essa con le notifiche push. La telemetria remota si riferisce alla raccolta e trasmissione automatica di dati da sorgenti remote – in questo caso il dispositivo di salute – al servizio centrale. Questa combinazione garantisce che i dati siano inviati regolarmente per il monitoraggio e che le informazioni o gli alert critici possano essere comunicati in modo efficace e tempestivo a chi di dovere.
+
+--- Slide 6 ---
