@@ -153,8 +153,14 @@ if __name__ == '__main__':
             continue
 
         try:
+            # If we have exceeded max requests per minute, wait
             if request_count[1] == max_rpm and request_count[0] == datetime.now().minute:
                 sleep(60 - datetime.now().second + 1)
+
+            # Reset count if minute has changed
+            if request_count[0] != datetime.now().minute:
+                request_count[0] = datetime.now().minute
+                request_count[1] = 0
 
             resp_text = call_gemini(page_content)
             request_count[1] = request_count[1] + 1
