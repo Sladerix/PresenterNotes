@@ -7,7 +7,8 @@ from time import sleep
 from typing import List, Dict
 from tqdm import tqdm
 
-GEMINI_API_KEY = ""
+import os
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 from google import genai
 
@@ -155,7 +156,7 @@ if __name__ == '__main__':
             if request_count[1] == max_rpm and request_count[0] == datetime.now().minute:
                 sleep(60 - datetime.now().second + 1)
 
-            resp_text = call_gemini(page_content, model=args.model)
+            resp_text = call_gemini(page_content)
             request_count[1] = request_count[1] + 1
 
         except Exception as e:
