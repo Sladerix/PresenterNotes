@@ -47,6 +47,8 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 E impostare la variabile d'ambiente nel terminale (macOS / zsh):
 
+> Generare la tua chiave API su [Google AI Studio](https://aistudio.google.com/app/projects)
+
 ```bash
 export GEMINI_API_KEY="la_tua_chiave_gemini"
 ```
