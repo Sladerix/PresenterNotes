@@ -111,8 +111,10 @@ def write_output(responses: Dict[int, str], out_path: str = None, fmt: str = 'pl
         else:
             with open(out_path, 'w', encoding='utf-8') as f:
                 for idx in sorted(responses.keys()):
+                    response = responses[idx]
                     f.write(f"--- Slide {idx} ---\n")
-                    f.write(responses[idx] + "\n\n")
+                    f.write(response if responses is not None else "")
+                    f.write("\n\n")
 
         logging.info(f"Output written to {out_path}")
 
