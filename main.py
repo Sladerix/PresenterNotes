@@ -30,7 +30,21 @@ rag_v2 = """
 Sono un professore, devo tenere un corso di otto ore, sfruttando determinati pacchi di slide che ho già.
 Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per Apple Keynote per ogni slide in italiano.
 Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di costi di formazione per persone che non sono direttamente nell'ambito in questione).
-Non osare formattazione particolare per il testo, perché le note presentatori di Apple Keynote non le supportano, piuttosto usa una formattazione basata su spazi, invii e TAB, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
+Non usare formattazione particolare per il testo, perché le note presentatori di Apple Keynote non le supportano, piuttosto usa una formattazione basata su spazi, invii e TAB, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
+L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
+Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
+Se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, fallo pure, più contenuto c'è meglio è.
+Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
+Non devi fare riferimento al fatto che stai generando delle note presentatore.
+Non fare il riassunto finale della slide.
+"""
+
+
+rag_v3 = """
+Sono un professore, devo tenere un corso di otto ore, sfruttando determinati pacchi di slide che ho già.
+Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per Apple Keynote per ogni slide in italiano.
+Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di costi di formazione per persone che non sono direttamente nell'ambito in questione).
+Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
 L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
 Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
 Se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, fallo pure, più contenuto c'è meglio è.
@@ -43,7 +57,7 @@ Non fare il riassunto finale della slide.
 max_rpm = 10
 request_count: List[int] = [datetime.now().minute, 0]
 
-def extract_content_from_pdf(path: str) -> List:
+def extract_content_from_pdf(path: str) -> list:
     """Estrae il testo da ogni pagina del PDF. Restituisce una lista di stringhe, una per pagina.
     Usa PyPDF2; se il PDF contiene solo immagini e vuoi OCR, il codice dovrà essere esteso con pdf2image+pytesseract (commento nel README).
     """
@@ -77,23 +91,23 @@ def extract_content_from_pdf(path: str) -> List:
 
     return pdf_content
 
-def call_gemini(prompt: str, model: str = "gemini-2.5-flash") -> str | None:
+def call_gemini(prompt, model: str = "gemini-2.5-flash") -> str | None:
     """Invia `prompt` a Gemini tramite il client `google.genai`.
     Poiché l'SDK può avere diverse API, proviamo alcune chiamate comuni e forniamo un errore esplicativo se tutte falliscono.
     """
     # Non importiamo o inizializziamo client a livello globale per evitare side-effect in fase di import
     try:
-        # Tentativo 1: istanziare client e usare generate_text
         client = genai.Client(api_key=GEMINI_API_KEY)
 
+        prompt.insert(0, rag_v3)
+
         resp = client.models.generate_content(
-            model=model, contents=[f"{rag_v2}\n\n{prompt}"]
+            model=model, contents=prompt
         )
 
         if hasattr(resp, 'text'):
             return resp.text
         if hasattr(resp, 'output'):
-            # output potrebbe essere una lista di contenuti
             out = getattr(resp, 'output')
             return str(out)
 
@@ -103,17 +117,27 @@ def call_gemini(prompt: str, model: str = "gemini-2.5-flash") -> str | None:
         logging.error(f"Generazione Gemini fallita: {e}")
         pass
 
-def write_output(responses: Dict[int, str], out_path: str = None, fmt: str = 'plain') -> None:
+def write_output(responses: Dict[int, str], out_path: str = None, fmt: str = 'md') -> None:
+    """Scrive le risposte in formato Markdown (default) o JSON.
+    Per Markdown crea una separazione leggibile per slide usando intestazioni e linee orizzontali.
+    """
     if out_path:
         if fmt == 'json':
             with open(out_path, 'w', encoding='utf-8') as f:
                 json.dump(responses, f, ensure_ascii=False, indent=2)
+        elif fmt == 'md':
+            with open(out_path, 'w', encoding='utf-8') as f:
+                for idx in sorted(responses.keys()):
+                    response = responses[idx] or ""
+                    f.write(f"## Slide {idx}\n\n")
+                    f.write(response)
+                    f.write("\n\n---\n\n")
         else:
             with open(out_path, 'w', encoding='utf-8') as f:
                 for idx in sorted(responses.keys()):
-                    response = responses[idx]
+                    response = responses[idx] or ""
                     f.write(f"--- Slide {idx} ---\n")
-                    f.write(response if responses is not None else "")
+                    f.write(response)
                     f.write("\n\n")
 
         logging.info(f"Output written to {out_path}")
@@ -121,10 +145,15 @@ def write_output(responses: Dict[int, str], out_path: str = None, fmt: str = 'pl
     else:
         if fmt == 'json':
             print(json.dumps(responses, ensure_ascii=False, indent=2))
+        elif fmt == 'md':
+            for idx in sorted(responses.keys()):
+                print(f"## Slide {idx}\n")
+                print(responses[idx] or "")
+                print("\n---\n")
         else:
             for idx in sorted(responses.keys()):
                 print(f"--- Slide {idx} ---")
-                print(responses[idx])
+                print(responses[idx] or "")
                 print()
 
 
@@ -133,7 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
     parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
     parser.add_argument('--model', help='Nome del modello Gemini da usare (opzionale)', default=None)
-    parser.add_argument('--format', choices=['plain', 'json'], default='plain', help='Formato di output')
+    parser.add_argument('--format', choices=['md', 'plain', 'json'], default='md', help='Formato di output (default: md)')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.ERROR)
@@ -146,7 +175,7 @@ if __name__ == '__main__':
 
     responses: Dict[int, str] = {}
 
-    for i, page_content in tqdm(enumerate(pages, start=1), unit="slide"):
+    for i, page_content in tqdm(enumerate(pages, start=1), total=len(pages), unit="slide"):
 
         logging.info(f"Invio slide {i} a Gemini...")
 
@@ -164,7 +193,7 @@ if __name__ == '__main__':
                 request_count[0] = datetime.now().minute
                 request_count[1] = 0
 
-            resp_text = call_gemini(page_content)
+            resp_text = call_gemini(page_content, model=args.model or "gemini-2.5-flash")
             request_count[1] = request_count[1] + 1
 
         except Exception as e:
