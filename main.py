@@ -1,4 +1,5 @@
 import argparse
+import io
 import json
 import sys
 import logging
@@ -6,6 +7,7 @@ from datetime import datetime
 from time import sleep
 from typing import List, Dict
 from tqdm import tqdm
+from PIL import Image
 
 import os
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
@@ -53,6 +55,21 @@ Non devi fare riferimento al fatto che stai generando delle note presentatore.
 Non fare il riassunto finale della slide.
 """
 
+rag_v4 = """
+Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
+Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano.
+Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di cosri di formazione per persone che non sono direttamente nell'ambito in questione).
+Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
+L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
+Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
+Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomendo, non esagerare.
+Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
+Non devi fare riferimento al fatto che stai generando delle note presentatore.
+Non fare il riassunto finale della slide.
+"""
+
+RAG = rag_v4
+
 # first element is the minute, second element is the request made in that minute
 max_rpm = 10
 request_count: List[int] = [datetime.now().minute, 0]
@@ -79,13 +96,25 @@ def extract_content_from_pdf(path: str) -> list:
             logging.error(e)
 
         try:
-            images = page.images
+
+            pil_images = []
+
+            # Itera sulle pagine
+            for img in page.images:
+                # Ottieni i dati binari dell'immagine
+                data = img.data
+
+                # Converte in PIL.Image
+                pil_img = Image.open(io.BytesIO(data))
+
+                pil_images.append(pil_img)
+
         except Exception as e:
-            images = []
+            pil_images = []
             logging.info(e)
 
         page_content.append(text)
-        page_content.extend(images)
+        page_content.extend(pil_images)
 
         pdf_content.append(page_content)
 
@@ -99,7 +128,7 @@ def call_gemini(prompt, model: str = "gemini-2.5-flash") -> str | None:
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
 
-        prompt.insert(0, rag_v3)
+        prompt.insert(0, RAG)
 
         resp = client.models.generate_content(
             model=model, contents=prompt
