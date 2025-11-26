@@ -8,11 +8,22 @@ from time import sleep
 from typing import List, Dict
 from tqdm import tqdm
 from PIL import Image
-
 import os
+from google import genai
+
+logging.basicConfig(level=logging.ERROR)
+
+parser = argparse.ArgumentParser(description='Estrai testo da un PDF per slide e invia ogni slide a Gemini (Google genai).')
+parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
+parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
+parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
+parser.add_argument('--model', help='Nome del modello Gemini da usare (opzionale)', default=None)
+parser.add_argument('--format', choices=['md', 'plain', 'json'], default='md', help='Formato di output (default: md)')
+args = parser.parse_args()
+
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
-from google import genai
+
 
 rag_v1 = """
 Sono un professore e devo tenere un corso di otto ore sfruttando determinati pacchi di slide che ho già.
@@ -27,7 +38,6 @@ Non è necessario che tu faccia riferimento al fatto che stai generando delle no
 Assolutamente non devi inserire frasi di circostanza o simili, nessun "buongiorno", "arrivederci" ecc..
 """
 
-
 rag_v2 = """
 Sono un professore, devo tenere un corso di otto ore, sfruttando determinati pacchi di slide che ho già.
 Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per Apple Keynote per ogni slide in italiano.
@@ -40,7 +50,6 @@ Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera",
 Non devi fare riferimento al fatto che stai generando delle note presentatore.
 Non fare il riassunto finale della slide.
 """
-
 
 rag_v3 = """
 Sono un professore, devo tenere un corso di otto ore, sfruttando determinati pacchi di slide che ho già.
@@ -82,27 +91,28 @@ Non fare il riassunto finale della slide.\n
 
 rag_v6 = """
 Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano.
-Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di cosri di formazione per persone che non sono direttamente nell'ambito in questione).
-Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide. Ogni slide deve essere separata dalle altre da un titolo iniziale (esempio: #Slide 1) e da un separatore orizzontale (---) alla sua fine.
-Sfrutta la sintassi di markdown con gli headings per rispettare la gerarchia delle slide, capitoli, sottocapitoli ed elenchi puntati o numerati dove necessario.
-L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
-Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
-Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
+Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano in un file mardown (.md).
+Se ci sono termini tecnici in inglese che non hanno una traduzione italiana comune, mantienili in inglese.
+Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di corsi di formazione per persone che non sono direttamente coinvolte nell'ambito in questione).
+Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando tutti gli headings, sottotitoli e elenchi, in modo da ottimizzare la struttura e la leggibilità per il lettore.
+Ogni slide deve essere separata dalle altre sfruttando questa sintassi: ## Slide <numero slide>, <contenuto slide con sintassi mardown>, --- (separatore orizzontale).
+è importante sfruttare la sintassi di markdown per rispettare la gerarchia dei contenuti nelle slide (capitoli, sottocapitoli ed elenchi puntati o numerati dove necessario).
+Se una slide è vuota o non ha contenuto metti comunque il titolo e il separatore senza nessun contenuto, così anche se non c'è testo nelle slide io lo vedo nel file markdown.
+Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili. Non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slides.
 Non devi fare riferimento al fatto che stai generando delle note presentatore.
 Non fare il riassunto finale della slide.\n
 """
 
 rag_level = [
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomendo, non esagerare.",
-    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomendo, non esagerare. Se vedi slide con poco testo, allora in quel caso si estensivo."
+    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Se vedi slide con poco testo, allora in quel caso si estensivo senza esagerare.",
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto, potrebbe essere utile avere maggiori informazioni per la spiegazione.",
-    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, più contenuto c'è meglio è, quindi sentiti libero di espandere il discorso."
+    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, più contenuto c'è meglio è, quindi sentiti libero di espandere il discorso.",
     ]
 
 
-RAG_DETAIL_LEVEL = 0
-RAG = rag_v5 + rag_level[RAG_DETAIL_LEVEL]
+RAG_DETAIL_LEVEL = args.detail_level or 0
+RAG = rag_v6 + rag_level[RAG_DETAIL_LEVEL]
 
 # first element is the minute, second element is the request made in that minute
 max_rpm = 10
@@ -221,16 +231,6 @@ def write_output(responses: Dict[int, str], out_path: str = None, fmt: str = 'md
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Estrai testo da un PDF per slide e invia ogni slide a Gemini (Google genai).')
-    parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
-    parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
-    parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0,1,2,3], default=0)
-    parser.add_argument('--model', help='Nome del modello Gemini da usare (opzionale)', default=None)
-    parser.add_argument('--format', choices=['md', 'plain', 'json'], default='md', help='Formato di output (default: md)')
-    args = parser.parse_args()
-
-    logging.basicConfig(level=logging.ERROR)
-
     try:
         pages = extract_content_from_pdf(args.pdf)
     except Exception as e:
