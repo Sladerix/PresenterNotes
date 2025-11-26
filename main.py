@@ -18,7 +18,6 @@ parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF del
 parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
 parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
 parser.add_argument('--model', help='Nome del modello Gemini da usare (opzionale)', default=None)
-parser.add_argument('--format', choices=['md', 'plain', 'json'], default='md', help='Formato di output (default: md)')
 args = parser.parse_args()
 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
@@ -95,9 +94,10 @@ Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso ora
 Se ci sono termini tecnici in inglese che non hanno una traduzione italiana comune, mantienili in inglese.
 Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di corsi di formazione per persone che non sono direttamente coinvolte nell'ambito in questione).
 Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando tutti gli headings, sottotitoli e elenchi, in modo da ottimizzare la struttura e la leggibilità per il lettore.
-Ogni slide deve essere separata dalle altre sfruttando questa sintassi: ## Slide <numero slide>, <contenuto slide con sintassi mardown>, --- (separatore orizzontale).
+Ogni slide deve essere separata dalle altre sfruttando questa sintassi: <contenuto slide con sintassi mardown>, --- (separatore orizzontale).
 è importante sfruttare la sintassi di markdown per rispettare la gerarchia dei contenuti nelle slide (capitoli, sottocapitoli ed elenchi puntati o numerati dove necessario).
-Se una slide è vuota o non ha contenuto metti comunque il titolo e il separatore senza nessun contenuto, così anche se non c'è testo nelle slide io lo vedo nel file markdown.
+Non inserire il titolo principale di ogni slide perchè ci penserò io a metterlo dopo.
+Se una slide è vuota o non ha contenuto metti comunque il separatore senza nessun contenuto, così anche se non c'è testo nelle slide io lo vedo nel file markdown.
 Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili. Non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slides.
 Non devi fare riferimento al fatto che stai generando delle note presentatore.
 Non fare il riassunto finale della slide.\n
@@ -190,44 +190,25 @@ def call_gemini(prompt, model: str = "gemini-2.5-flash") -> str | None:
         logging.error(f"Generazione Gemini fallita: {e}")
         pass
 
-def write_output(responses: Dict[int, str], out_path: str = None, fmt: str = 'md') -> None:
+def write_output(responses: Dict[int, str], out_path: str = None) -> None:
     """Scrive le risposte in formato Markdown (default) o JSON.
     Per Markdown crea una separazione leggibile per slide usando intestazioni e linee orizzontali.
     """
     if out_path:
-        if fmt == 'json':
-            with open(out_path, 'w', encoding='utf-8') as f:
-                json.dump(responses, f, ensure_ascii=False, indent=2)
-        elif fmt == 'md':
-            with open(out_path, 'w', encoding='utf-8') as f:
-                for idx in sorted(responses.keys()):
-                    response = responses[idx] or ""
-                    f.write(f"## Slide {idx}\n\n")
-                    f.write(response)
-                    f.write("\n\n---\n\n")
-        else:
-            with open(out_path, 'w', encoding='utf-8') as f:
-                for idx in sorted(responses.keys()):
-                    response = responses[idx] or ""
-                    f.write(f"--- Slide {idx} ---\n")
-                    f.write(response)
-                    f.write("\n\n")
+        with open(out_path, 'w', encoding='utf-8') as f:
+            for idx in sorted(responses.keys()):
+                response = responses[idx] or ""
+                f.write(f"## Slide {idx}\n\n")
+                f.write(response)
+                f.write("\n\n---\n\n")
 
         logging.info(f"Output written to {out_path}")
 
     else:
-        if fmt == 'json':
-            print(json.dumps(responses, ensure_ascii=False, indent=2))
-        elif fmt == 'md':
-            for idx in sorted(responses.keys()):
-                print(f"## Slide {idx}\n")
-                print(responses[idx] or "")
-                print("\n---\n")
-        else:
-            for idx in sorted(responses.keys()):
-                print(f"--- Slide {idx} ---")
-                print(responses[idx] or "")
-                print()
+        for idx in sorted(responses.keys()):
+            print(f"## Slide {idx}\n")
+            print(responses[idx] or "")
+            print("\n---\n")
 
 
 if __name__ == '__main__':
@@ -265,4 +246,4 @@ if __name__ == '__main__':
             resp_text = f"[ERROR] {e}"
         responses[i] = resp_text
 
-    write_output(responses, out_path=args.out, fmt=args.format)
+    write_output(responses, out_path=args.out)  # always uses default 'md'
