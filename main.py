@@ -68,7 +68,27 @@ Non devi fare riferimento al fatto che stai generando delle note presentatore.
 Non fare il riassunto finale della slide.
 """
 
-RAG = rag_v4
+rag_v5 = """
+Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
+Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano.
+Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di cosri di formazione per persone che non sono direttamente nell'ambito in questione).
+Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide. Ogni slide deve essere separata dalle altre da un titolo iniziale (esempio: #Slide 1) e da un separatore orizzontale (---) alla sua fine.
+L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
+Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
+Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
+Non devi fare riferimento al fatto che stai generando delle note presentatore.
+Non fare il riassunto finale della slide.\n
+"""
+
+rag_level = [
+    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomendo, non esagerare.",
+    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto, potrebbe essere utile avere maggiori informazioni per la spiegazione.",
+    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, più contenuto c'è meglio è, quindi sentiti libero di espandere il discorso."
+    ]
+
+
+RAG_DETAIL_LEVEL = 0
+RAG = rag_v5 + rag_level[RAG_DETAIL_LEVEL]
 
 # first element is the minute, second element is the request made in that minute
 max_rpm = 10
@@ -190,6 +210,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Estrai testo da un PDF per slide e invia ogni slide a Gemini (Google genai).')
     parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
     parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
+    parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-2)', type=int, choices=[0,1,2], default=0)
     parser.add_argument('--model', help='Nome del modello Gemini da usare (opzionale)', default=None)
     parser.add_argument('--format', choices=['md', 'plain', 'json'], default='md', help='Formato di output (default: md)')
     args = parser.parse_args()
