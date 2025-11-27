@@ -90,14 +90,16 @@ Non fare il riassunto finale della slide.\n
 
 rag_v6 = """
 Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano in un file mardown (.md).
+Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano in un file markdown (.md).
 Se ci sono termini tecnici in inglese che non hanno una traduzione italiana comune, mantienili in inglese.
 Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di corsi di formazione per persone che non sono direttamente coinvolte nell'ambito in questione).
 Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando tutti gli headings, sottotitoli e elenchi, in modo da ottimizzare la struttura e la leggibilità per il lettore.
-è importante sfruttare la sintassi di markdown per rispettare la gerarchia dei contenuti nelle slide (capitoli, sottocapitoli ed elenchi puntati o numerati dove necessario).
-Non inserire il titolo principale di ogni slide perchè ci penserò io a metterlo dopo.
-Non inserire separatori orizzontali.
-Se una slide è vuota o non ha contenuto metti comunque il separatore senza nessun contenuto, così anche se non c'è testo nelle slide io lo vedo nel file markdown.
+è importante sfruttare la sintassi di markdown per rispettare la gerarchia dei contenuti nella slide (sottocapitoli, elenchi puntati o numerati, sotto elenchi).
+Formatta diversamente il testo per catturare l'attenzione sulle parole chiave dove necessario (es. bold, italic, ecc...).
+Non inserire il titolo principale di ogni slide perchè ci penserò io a metterlo dopo, quindi non inserire nessun heading di primo o secondo livello (#, ##) parti con headings di secondo livello (###).
+Non inserire MAI separatori mardown orizzontali (---).
+è importantissimo che inizi il discorso direttamente con il contenuto della slide, senza introduzioni o frasi di contesto.
+L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
 Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili. Non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slides.
 Non devi fare riferimento al fatto che stai generando delle note presentatore.
 Non fare il riassunto finale della slide.\n
@@ -107,7 +109,7 @@ rag_level = [
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomendo, non esagerare.",
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Se vedi slide con poco testo, allora in quel caso si estensivo senza esagerare.",
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto, potrebbe essere utile avere maggiori informazioni per la spiegazione.",
-    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, più contenuto c'è meglio è, quindi sentiti libero di espandere il discorso.",
+    "Più contenuto c'è meglio è, quindi sentiti libero di espandere il discorso ove necessario.",
     ]
 
 
@@ -150,7 +152,6 @@ def parse_page_selection(selection: str, num_pages: int) -> List[int]:
             pages.add(n)
 
     return sorted(pages)
-
 
 def extract_content_from_pdf(path: str, page_selection: str | None = None) -> list:
     """Estrae il testo da ogni pagina selezionata del PDF. Restituisce una lista di page_content in ordine di pagina.
@@ -227,7 +228,7 @@ def call_gemini(prompt, model: str = "gemini-2.5-flash") -> str | None:
 
     except Exception as e:
         logging.error(f"Generazione Gemini fallita: {e}")
-        pass
+        return None
 
 def write_output(responses: Dict[int, str], out_path: str = None) -> None:
     """Scrive le risposte in formato Markdown (default) o JSON.
@@ -237,7 +238,7 @@ def write_output(responses: Dict[int, str], out_path: str = None) -> None:
         with open(out_path, 'w', encoding='utf-8') as f:
             for idx in sorted(responses.keys()):
                 response = responses[idx] or ""
-                f.write(f"## Slide {idx}\n\n")
+                f.write(f"# Slide {idx}\n\n")
                 f.write(response)
                 f.write("\n\n---\n\n")
 
@@ -245,7 +246,7 @@ def write_output(responses: Dict[int, str], out_path: str = None) -> None:
 
     else:
         for idx in sorted(responses.keys()):
-            print(f"## Slide {idx}\n")
+            print(f"# Slide {idx}\n")
             print(responses[idx] or "")
             print("\n---\n")
 
@@ -278,6 +279,8 @@ if __name__ == '__main__':
                 request_count[1] = 0
 
             resp_text = call_gemini(page_content, model=args.model or "gemini-2.5-flash")
+            if resp_text is None:
+                raise RuntimeError(f"Nessuna risposta valida da Gemini per la slide #{i}")
             request_count[1] = request_count[1] + 1
 
         except Exception as e:
