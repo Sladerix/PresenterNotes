@@ -5,7 +5,7 @@ SlidesPresenterNotes è uno script Python che estrae il testo dalle pagine di un
 ## Panoramica
 - Estrae il testo da ogni pagina del PDF (usa PyPDF2).
 - Invia il testo estratto a un modello generativo via funzione `call_gemini` in `main.py`.
-- Produce un file di output in formato plain (testo) o JSON.
+- Produce un file di output in formato Markdown (.md).
 - Gestisce pagine vuote ritornando `[NESSUN TESTO RILEVATO]`.
 
 ## Requisiti
@@ -54,34 +54,29 @@ export GEMINI_API_KEY="la_tua_chiave_gemini"
 ```
 
 ## Uso
-Scrivere l'output su file (formato plain):
+Scrivere l'output su file Markdown (.md):
 
 ```bash
-python main.py --pdf /percorso/alle/slide.pdf --out notes.txt
+python main.py --pdf /percorso/alle/slide.pdf --out notes.md
 ```
 
+Se ometti `--out`, l'output in Markdown verrà stampato su stdout.
 
 ### Opzioni principali
 - `--pdf, -p` (obbligatorio): percorso al file PDF delle slide.
-- `--out, -o`: percorso del file di output (se omesso viene stampato su stdout).
+- `--out, -o`: percorso del file di output (se omesso viene stampato su stdout). Il file prodotto sarà in formato Markdown (.md).
 - `--model`: nome del modello Gemini da usare (opzionale).
-- `--format`: `plain` o `json` (default: `plain`).
-
-## Dettagli tecnici
-- L'estrazione del testo è effettuata con PyPDF2. Se il PDF contiene solo immagini (es. scan), PyPDF2 non ricaverà testo utile. Per documenti scannerizzati è necessario usare OCR (`pdf2image` + `pytesseract`) e integrare l'OCR dentro `extract_content_from_pdf`.
-- Se una pagina è vuota o non contiene testo rilevato, lo script restituisce la stringa: `[NESSUN TESTO RILEVATO]`.
-- Il prompt usato per la generazione (variabili `rag_v1` / `rag_v2` in `main.py`) è pensato per produrre un testo discorsivo in italiano e senza frasi di cortesia o introduzioni. Puoi modificarlo per adattarlo al tuo stile.
-- C'è una limitazione semplice delle richieste (`max_rpm = 10`) per non superare un rate limit; adattala in base alle policy del provider.
-- La funzione `call_gemini` usa il client `google.genai` ma alcuni SDK potrebbero avere interfacce diverse; in caso di errore aggiorna la chiamata alle API secondo la documentazione del client che usi.
+- `--detail-level`: livello di dettaglio per le note presentatore (0-3).
+- `--pages, -P`: pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.
 
 ## Flusso di lavoro consigliato
 1. Preparare il PDF delle slide.
 2. Esportare / impostare la chiave API come variabile d'ambiente.
-3. Eseguire lo script e salvare l'output.
-4. Aprire il file prodotto e copiare le note nella sezione presentatore di Keynote.
+3. Eseguire lo script e salvare l'output in un file .md.
 
 ## Possibili miglioramenti
 - Supporto OCR per slide scannerizzate.
 - Lettura sicura della chiave API da `.env` (usando `python-dotenv`) o dal sistema di secret management.
 - Migliorare logging e aggiungere flag per il livello di log.
 - Tests automatici per l'estrazione del testo e la logica di parsing.
+- Introdurre un sistema per fornire un contesto rassiuntivo per ogni iterazione
