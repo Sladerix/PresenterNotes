@@ -97,7 +97,7 @@ Le note presentatore in output devono essere scritte in Markdown (.md) sfruttand
 è importante sfruttare la sintassi di markdown per rispettare la gerarchia dei contenuti nella slide (sottocapitoli, elenchi puntati o numerati, sotto elenchi).
 Formatta diversamente il testo per catturare l'attenzione sulle parole chiave dove necessario (es. bold, italic, ecc...).
 Non inserire il titolo principale di ogni slide perchè ci penserò io a metterlo dopo, quindi non inserire nessun heading di primo o secondo livello (#, ##) parti con headings di secondo livello (###).
-Non inserire MAI separatori mardown orizzontali (---).
+Non inserire MAI separatori markdown orizzontali (---).
 è importantissimo che inizi il discorso direttamente con il contenuto della slide, senza introduzioni o frasi di contesto.
 L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
 Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili. Non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slides.
@@ -115,6 +115,7 @@ rag_level = [
 
 RAG_DETAIL_LEVEL = args.detail_level or 0
 RAG = rag_v6 + rag_level[RAG_DETAIL_LEVEL]
+print(f"Using RAG detail level: {RAG_DETAIL_LEVEL}.")
 
 # first element is the minute, second element is the request made in that minute
 max_rpm = 10
