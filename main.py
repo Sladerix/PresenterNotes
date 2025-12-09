@@ -1,14 +1,15 @@
 import argparse
+import base64
 import io
 import sys
 import logging
 from datetime import datetime
 from time import sleep
-from typing import List, Dict
+from typing import List, Dict, cast
 from tqdm import tqdm
 from PIL import Image
 import os
-from google import genai
+from groq import Groq
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -16,14 +17,14 @@ parser = argparse.ArgumentParser(description='Estrai testo da un PDF per slide e
 parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
 parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
 parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
-parser.add_argument('--model', help='Nome del modello Gemini da usare (opzionale)', default=None)
+parser.add_argument('--model', help='Nome del modello AI da usare (opzionale)', default=None)
 parser.add_argument('--pages', '-P', help='Pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.', default=None)
 args = parser.parse_args()
 
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 
 
-
+# ELENCO DI VARIE VERSIONI DEL RAG USATE IN TESTING
 rag_v1 = """
 Sono un professore e devo tenere un corso di otto ore sfruttando determinati pacchi di slide che ho già.
 Le slide sono scritte in inglese, però per una sicurezza maggiore nel discorso (siccome il corso sarà in italiano) vorrei avere tutte le note presentatore scritte in italiano per ogni slide in modo da fare un discorso abbastanza esteso per ognuna ed essere sicuro di non finire mai il materiale che ho a disposizione.
@@ -70,7 +71,7 @@ Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di 
 Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
 L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
 Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
-Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomendo, non esagerare.
+Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomando, non esagerare.
 Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
 Non devi fare riferimento al fatto che stai generando delle note presentatore.
 Non fare il riassunto finale della slide.
@@ -106,11 +107,14 @@ Non fare il riassunto finale della slide.\n
 """
 
 rag_level = [
-    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomendo, non esagerare.",
+    "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomando, non esagerare.",
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Se vedi slide con poco testo, allora in quel caso si estensivo senza esagerare.",
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto, potrebbe essere utile avere maggiori informazioni per la spiegazione.",
     "Più contenuto c'è meglio è, quindi sentiti libero di espandere il discorso ove necessario.",
     ]
+
+
+
 
 
 RAG_DETAIL_LEVEL = args.detail_level or 0
@@ -121,6 +125,10 @@ print(f"Using RAG detail level: {RAG_DETAIL_LEVEL}.")
 max_rpm = 10
 request_count: List[int] = [datetime.now().minute, 0]
 
+
+def encode_image(path: str) -> str:
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 def parse_page_selection(selection: str, num_pages: int) -> List[int]:
     """Parsa una stringa di selezione pagine come "1,3-5" in una lista ordinata di numeri 1-based.
@@ -205,30 +213,51 @@ def extract_content_from_pdf(path: str, page_selection: str | None = None) -> li
 
     return pdf_content
 
-def call_gemini(prompt, model: str = "gemini-2.5-flash") -> str | None:
-    """Invia `prompt` a Gemini tramite il client `google.genai`.
-    Poiché l'SDK può avere diverse API, proviamo alcune chiamate comuni e forniamo un errore esplicativo se tutte falliscono.
-    """
-    # Non importiamo o inizializziamo client a livello globale per evitare side-effect in fase di import
+def call_groq(rag, page_content: list, model: str = "meta-llama/llama-4-scout-17b-16e-instruct") -> str | None:
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
+        text_parts = [item for item in page_content if isinstance(item, str) and item.strip()]
+        page_images = [item for item in page_content if hasattr(item, 'save')]
+        page_text = "\n\n".join(text_parts)
 
-        prompt.insert(0, RAG)
+        def pil_to_data_uri(img) -> str:
+            """Converte un'immagine PIL in un data URI base64."""
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+            # TODO se l'immagine contiene tutti pixel uguali allora ignorarla
+            return f"data:image/png;base64,{b64}"
 
-        resp = client.models.generate_content(
-            model=model, contents=prompt
+        user_content = [{"type": "text", "text": page_text or "[NESSUN TESTO RILEVATO]"}]
+        for img in page_images:
+            try:
+                user_content.append({
+                    "type": "image_url",
+                    "image_url": {"url": pil_to_data_uri(img)},
+                })
+            except Exception as e:
+                logging.info(f"Ignorata immagine non serializzabile: {e}")
+
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        messages = [
+            {"role": "system", "content": rag},
+            {"role": "user", "content": user_content}
+        ]
+
+        chat_completion = client.chat.completions.create(
+            model=model,
+            messages=cast(list, messages),
         )
 
-        if hasattr(resp, 'text'):
-            return resp.text
-        if hasattr(resp, 'output'):
-            out = getattr(resp, 'output')
-            return str(out)
-
-        return str(resp)
+        response = chat_completion.choices[0].message.content
+        if response:
+            #print(response)
+            return response.strip()
+        else:
+            logging.error("Nessun contenuto testuale ottenuto dalla risposta Groq.")
+            return None
 
     except Exception as e:
-        logging.error(f"Generazione Gemini fallita: {e}")
+        logging.error(f"Generazione Groq fallita: {e}")
         return None
 
 def write_output(responses: Dict[int, str], out_path: str = None) -> None:
@@ -253,7 +282,7 @@ def write_output(responses: Dict[int, str], out_path: str = None) -> None:
 
 
 if __name__ == '__main__':
-    try:
+    try: 
         pages = extract_content_from_pdf(args.pdf, page_selection=args.pages)
     except Exception as e:
         logging.error(f"Errore durante l'estrazione del PDF: {e}")
@@ -263,7 +292,7 @@ if __name__ == '__main__':
 
     for i, page_content in tqdm(enumerate(pages, start=1), total=len(pages), unit="slide"):
 
-        logging.info(f"Invio slide {i} a Gemini...")
+        logging.info(f"Invio slide {i} a Groq...")
 
         if  len(page_content) == 0:
             responses[i] = "[NESSUN TESTO RILEVATO]"
@@ -271,17 +300,17 @@ if __name__ == '__main__':
 
         try:
             # If we have exceeded max requests per minute, wait
-            if request_count[1] == max_rpm and request_count[0] == datetime.now().minute:
-                sleep(60 - datetime.now().second + 1)
+            #if request_count[1] == max_rpm and request_count[0] == datetime.now().minute:
+            #    sleep(60 - datetime.now().second + 1)
 
             # Reset count if minute has changed
             if request_count[0] != datetime.now().minute:
                 request_count[0] = datetime.now().minute
                 request_count[1] = 0
 
-            resp_text = call_gemini(page_content, model=args.model or "gemini-2.5-flash")
+            resp_text = call_groq(RAG, page_content)
             if resp_text is None:
-                raise RuntimeError(f"Nessuna risposta valida da Gemini per la slide #{i}")
+                raise RuntimeError(f"Nessuna risposta valida da Groq per la slide #{i}")
             request_count[1] = request_count[1] + 1
 
         except Exception as e:
