@@ -213,48 +213,64 @@ def extract_content_from_pdf(path: str, page_selection: str | None = None) -> li
 
     return pdf_content
 
-def call_groq(rag, page_content: list, model: str = "meta-llama/llama-4-scout-17b-16e-instruct") -> str | None:
+def call_groq(rag, page_content: list, model: str = "meta-llama/llama-4-scout-17b-16e-instruct", temperature: float = 0.6, max_tokens: int = 800) -> str | None:
     try:
         text_parts = [item for item in page_content if isinstance(item, str) and item.strip()]
         page_images = [item for item in page_content if hasattr(item, 'save')]
-        page_text = "\n\n".join(text_parts)
+        page_text = "\n\n".join(text_parts) or "[NESSUN TESTO RILEVATO]"
 
         def pil_to_data_uri(img) -> str:
-            """Converte un'immagine PIL in un data URI base64."""
             buf = io.BytesIO()
             img.save(buf, format="PNG")
             b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
             # TODO se l'immagine contiene tutti pixel uguali allora ignorarla
             return f"data:image/png;base64,{b64}"
 
-        user_content = [{"type": "text", "text": page_text or "[NESSUN TESTO RILEVATO]"}]
+        # Contenuto da inviare come user payload
+        user_content = [{"type": "text", "text": page_text}]
         for img in page_images:
             try:
                 user_content.append({
                     "type": "image_url",
                     "image_url": {"url": pil_to_data_uri(img)},
                 })
-            except Exception as e:
-                logging.info(f"Ignorata immagine non serializzabile: {e}")
+            except Exception:
+                logging.info("Ignorata immagine non serializzabile")
+
+        # Istruzioni esplicite per ottenere un discorso orale esteso
+        style_instructions = (
+            "Genera un discorso orale in italiano basato esclusivamente sul contenuto della slide.\n"
+            "- Espandi il contenuto in modo discorsivo e naturale, come se spiegassi la slide a una classe.\n"
+            "- NON inserire formule di cortesia (es. buongiorno, arrivederci) né riassunti finali.\n"
+            "- Se la slide è vuota rispondi con esattamente: [NESSUN TESTO RILEVATO].\n"
+            "- Se ci sono termini tecnici mantienili in inglese se necessario.\n"
+            "- Fornisci un testo facilmente incollabile nelle note presentatore, senza header aggiuntivi.\n"
+        )
+
+        # (Facoltativo) piccolo esempio nello stile desiderato: aiuta il modello a imitare il formato
+        example_user = [{"type": "text", "text": "Slide: Machine learning basics\n- Supervised learning\n- Unsupervised learning"}]
+        example_assistant = "La machine learning comprende due grandi famiglie: supervised learning, dove si ha un dataset etichettato..."  # breve esempio esemplificativo
 
         client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
         messages = [
             {"role": "system", "content": rag},
-            {"role": "user", "content": user_content}
+            {"role": "user", "content": style_instructions},
+            {"role": "user", "content": user_content},
+            # fornisco un esempio reale breve per guidare lo stile (se il provider lo supporta)
+            #{"role": "user", "content": example_user},
+            #{"role": "assistant", "content": example_assistant},
         ]
 
         chat_completion = client.chat.completions.create(
             model=model,
             messages=cast(list, messages),
+            temperature=temperature,
+            max_tokens=max_tokens,
         )
 
         response = chat_completion.choices[0].message.content
-        if response:
-            #print(response)
-            return response.strip()
-        else:
-            logging.error("Nessun contenuto testuale ottenuto dalla risposta Groq.")
-            return None
+        return response.strip() if response else None
 
     except Exception as e:
         logging.error(f"Generazione Groq fallita: {e}")
