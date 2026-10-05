@@ -3,7 +3,7 @@
 SlidesPresenterNotes è uno script Python che estrae il testo dalle pagine di un PDF di slide e genera delle note presentatore (in italiano) per ciascuna slide sfruttando un LLM a scelta (Groq, Gemini, Claude, OpenAI, ... tramite LiteLLM). Lo scopo è produrre testi discorsivi pronti da incollare nelle note presentatore di Apple Keynote.
 
 ## Panoramica
-- Estrae il testo da ogni pagina del PDF (usa PyPDF2).
+- Estrae il testo da ogni pagina del PDF (usa pypdf).
 - Invia il testo estratto a un modello generativo via `call_llm` in `main.py` (LiteLLM).
 - Produce un file di output in formato Markdown (.md).
 - Gestisce pagine vuote ritornando `[NESSUN TESTO RILEVATO]`.
@@ -11,7 +11,7 @@ SlidesPresenterNotes è uno script Python che estrae il testo dalle pagine di un
 ## Requisiti
 - Python 3.8 o superiore
 - Dipendenze (vedi `requirements.txt`). Al minimo lo script usa:
-  - PyPDF2
+  - pypdf
   - tqdm
   - litellm
 

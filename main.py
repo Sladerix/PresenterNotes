@@ -1,8 +1,12 @@
 import argparse
 import base64
+import hashlib
 import io
 import logging
+import re
 import sys
+from collections import Counter
+from time import sleep
 from typing import Dict, List
 
 from PIL import Image
@@ -13,26 +17,27 @@ logging.basicConfig(level=logging.ERROR)  # warning (immagini saltate) nascosti
 # Qualsiasi modello supportato da LiteLLM, formato "provider/modello". La chiave API
 # si legge dalla variabile d'ambiente del provider (GROQ_API_KEY, GEMINI_API_KEY,
 # ANTHROPIC_API_KEY, OPENAI_API_KEY, ...). Vedi https://docs.litellm.ai/docs/providers
-DEFAULT_MODEL = "groq/meta-llama/llama-4-scout-17b-16e-instruct"
+DEFAULT_MODEL = "groq/qwen/qwen3.8-27b"
 EMPTY_SLIDE = "[NESSUN TESTO RILEVATO]"
+SHORT_TEXT_CHARS = 250  # sotto questa soglia + immagini = slide "visiva"
+REPEATED_IMAGE_PAGES = 10  # immagine presente su >= N pagine = decorativa, scartata
+RATE_LIMIT_RETRIES = 5
+MAX_IMAGE_SIDE = 768  # px, lato lungo: meno token immagine
 
 # Le versioni precedenti del prompt (v1-v5) sono nella git history.
 RAG = """
-Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano in un file markdown (.md).
+Sono un professore e devo tenere un corso sfruttando dei pacchi di slide che ho già.
+Le slide sono in inglese, ma il corso si tiene in italiano: per ogni slide devi scrivere ciò che dirò a voce, in italiano.
+Scrivi un DISCORSO ORALE in prosa, come se stessi parlando davanti ai partecipanti: frasi complete e fluide, collegate tra loro, con un tono naturale e chiaro, adatto a una lezione tecnica ma accessibile (sono corsi di formazione per persone che non lavorano direttamente nell'ambito).
+Spiega e collega i concetti della slide invece di elencarli: non riprodurre la slide punto per punto, non fare elenchi puntati o numerati, non usare tabelle. Se la slide contiene un elenco, trasformalo in un ragionamento parlato (es. "innanzitutto... poi... infine...").
+Usa paragrafi brevi separati da una riga vuota, così il testo si legge facilmente mentre parlo.
+Formattazione consentita: solo il grassetto (**parola**) per le poche parole chiave su cui voglio mettere enfasi. Niente titoli, niente heading (#), niente separatori (---), niente elenchi.
 Se ci sono termini tecnici in inglese che non hanno una traduzione italiana comune, mantienili in inglese.
-Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di corsi di formazione per persone che non sono direttamente coinvolte nell'ambito in questione).
-Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando tutti gli headings, sottotitoli e elenchi, in modo da ottimizzare la struttura e la leggibilità per il lettore.
-è importante sfruttare la sintassi di markdown per rispettare la gerarchia dei contenuti nella slide (sottocapitoli, elenchi puntati o numerati, sotto elenchi).
-Formatta diversamente il testo per catturare l'attenzione sulle parole chiave dove necessario (es. bold, italic, ecc...).
-Non inserire il titolo principale di ogni slide perchè ci penserò io a metterlo dopo, quindi non inserire nessun heading di primo o secondo livello (#, ##) parti con headings di secondo livello (###).
-Non inserire MAI separatori markdown orizzontali (---).
-è importantissimo che inizi il discorso direttamente con il contenuto della slide, senza introduzioni o frasi di contesto.
-L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
-Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili. Non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slides.
-Non devi fare riferimento al fatto che stai generando delle note presentatore.
-Non fare il riassunto finale della slide.
+Inizia direttamente con il contenuto della slide, senza introduzioni o frasi di contesto, senza saluti o formule di cortesia ("iniziamo", "buongiorno", "arrivederci", ecc.) e senza riassunto finale.
+Non fare riferimento al fatto che stai generando delle note né al fatto che stai guardando una slide ("in questa slide vediamo" è da evitare: parla direttamente degli argomenti).
+Se la slide ha poco testo e contiene un'immagine, un diagramma o uno schema, il contenuto vero della slide è l'immagine: osservala con attenzione, descrivi a voce ciò che mostra (elementi, relazioni, etichette, flussi, rappresentazioni, ...) e spiega perché è significativa nel contesto del titolo/testo della slide, arricchendo il discorso con le informazioni rilevanti che conosci sull'argomento. In questo caso il discorso può essere più esteso del solito, ma comunque non eccessivo.
 Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
+Il tuo output verrà incollato direttamente nelle note presentatore: deve contenere solo il discorso, senza altro.
 """
 
 rag_level = [
@@ -62,16 +67,17 @@ def parse_page_selection(selection: str | None, num_pages: int) -> List[int]:
     return sorted(pages)
 
 
-def extract_content_from_pdf(path: str, page_selection: str | None = None) -> Dict[int, list]:
+def extract_content_from_pdf(path: str, page_selection: str | None = None, with_images: bool = True, max_images: int | None = None) -> Dict[int, list]:
     """Restituisce {numero_pagina (1-based): [testo, immagine PIL, ...]} per le pagine selezionate.
     Nessun OCR: un PDF di sole immagini arriva al modello come immagini.
     """
-    from PyPDF2 import PdfReader
+    from pypdf import PdfReader
 
     reader = PdfReader(path)
     selected = parse_page_selection(page_selection, len(reader.pages))
 
     pdf_content: Dict[int, list] = {}
+    digests: Dict[int, list] = {}  # pagina -> hash immagini, per scartare quelle ripetute
     for page_number in selected:
         page = reader.pages[page_number - 1]
 
@@ -81,35 +87,52 @@ def extract_content_from_pdf(path: str, page_selection: str | None = None) -> Di
             text = ""
             logging.error(f"Pagina {page_number}: estrazione testo fallita: {e}")
 
-        images = []
+        images, hashes = [], []
         try:
-            n_images = len(page.images)
+            n_images = len(page.images) if with_images else 0
         except Exception as e:
             n_images = 0
             logging.warning(f"Pagina {page_number}: lista immagini fallita: {e}")
         for i in range(n_images):
-            # una per una: PyPDF2 non sa decodificare alcuni modi (es. PA), si salta solo quell'immagine
+            # una per una: alcuni modi immagine possono fallire decodificare alcuni modi (es. PA), si salta solo quell'immagine
             try:
-                images.append(Image.open(io.BytesIO(page.images[i].data)))
+                data = page.images[i].data
+                images.append(Image.open(io.BytesIO(data)))
+                hashes.append(hashlib.md5(data).hexdigest())
             except Exception as e:
                 logging.warning(f"Pagina {page_number}: immagine {i} saltata: {e}")
 
         pdf_content[page_number] = [text, *images]
+        digests[page_number] = hashes
+
+    # logo/sfondi: stessa immagine su >= REPEATED_IMAGE_PAGES pagine -> non la rimando al modello
+    counts = Counter(h for hs in digests.values() for h in set(hs))
+    for n, content in pdf_content.items():
+        keep = [img for img, h in zip(content[1:], digests[n]) if counts[h] < REPEATED_IMAGE_PAGES]
+        if max_images is not None:  # tiene le N più grandi (le piccole sono di solito icone)
+            keep = sorted(keep, key=lambda im: im.width * im.height, reverse=True)[:max_images]
+        pdf_content[n] = [content[0], *keep]
 
     return pdf_content
 
 
 def pil_to_data_uri(img: Image.Image) -> str:
     buf = io.BytesIO()
-    img.convert("RGB").save(buf, format="PNG")  # RGB: PNG non salva CMYK
+    img = img.convert("RGB")
+    img.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+    img.save(buf, format="PNG")  # RGB: PNG non salva CMYK
     return f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}"
 
 
-def call_llm(system: str, page_content: list, model: str, temperature: float = 0.6, max_tokens: int = 800) -> str:
+def call_llm(system: str, page_content: list, model: str, temperature: float = 0.6, max_tokens: int = 1000) -> str:
     """Una chiamata LiteLLM per slide. Solleva eccezione su errore (il chiamante decide)."""
-    from litellm import completion
+    import litellm
+    from litellm import RateLimitError, completion
+    litellm.suppress_debug_info = True  # niente banner "Give Feedback" a ogni errore
 
     text = page_content[0].strip() or EMPTY_SLIDE
+    if len(page_content) > 1 and len(text) < SHORT_TEXT_CHARS:
+        text += "\n\n[NOTA: questa slide ha poco testo; l'immagine allegata è il contenuto principale: descrivila e spiegala in modo arricchito.]"
     user_content = [{"type": "text", "text": text}]
     for img in page_content[1:]:
         try:
@@ -117,13 +140,25 @@ def call_llm(system: str, page_content: list, model: str, temperature: float = 0
         except Exception as e:
             logging.error(f"Immagine ignorata: {e}")
 
-    response = completion(
+    kwargs = dict(
         model=model,
         messages=[{"role": "system", "content": system}, {"role": "user", "content": user_content}],
         temperature=temperature,
         max_tokens=max_tokens,
-        num_retries=3,  # gestisce rate limit / errori transitori
+        num_retries=3,  # errori transitori; i rate limit li gestisce il ciclo sotto
     )
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
+        try:
+            response = completion(**kwargs)
+            break
+        except RateLimitError as e:
+            if attempt == RATE_LIMIT_RETRIES:
+                raise
+            # i provider dicono quanto aspettare: "Please try again in 4.875s" / "1m2.5s"
+            m = re.search(r"try again in (?:(\d+)m)?([\d.]+)s", str(e))
+            wait = (int(m.group(1) or 0) * 60 + float(m.group(2)) + 1) if m else 15
+            tqdm.write(f"Rate limit: attendo {wait:.0f}s e riprovo ({attempt + 1}/{RATE_LIMIT_RETRIES})")
+            sleep(wait)
     content = response.choices[0].message.content
     if not content:
         raise RuntimeError("risposta vuota dal modello")
@@ -147,13 +182,15 @@ def main() -> None:
     parser.add_argument('--model', '-m', default=DEFAULT_MODEL,
                         help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5 (default: {DEFAULT_MODEL})')
     parser.add_argument('--pages', '-P', help='Pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.')
+    parser.add_argument('--no-images', action='store_true', help='Non inviare le immagini al modello (molto meno token)')
+    parser.add_argument('--max-images', type=int, metavar='N', help='Massimo N immagini per slide (le più grandi), per modelli con limiti es. Groq free = 3')
     args = parser.parse_args()
 
     system = RAG + rag_level[args.detail_level]
     print(f"Modello: {args.model} | livello di dettaglio: {args.detail_level}", file=sys.stderr)
 
     try:
-        pages = extract_content_from_pdf(args.pdf, page_selection=args.pages)
+        pages = extract_content_from_pdf(args.pdf, page_selection=args.pages, with_images=not args.no_images, max_images=args.max_images)
     except Exception as e:
         logging.error(f"Errore durante l'estrazione del PDF: {e}")
         sys.exit(2)
