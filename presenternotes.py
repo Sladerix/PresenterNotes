@@ -36,7 +36,7 @@ MAX_IMAGE_SIDE = 768  # px, lato lungo: meno token immagine
 RAG = """
 Sono un professore e devo tenere un corso sfruttando dei pacchi di slide che ho già.
 Le slide sono in inglese, ma il corso si tiene in italiano: per ogni slide devi scrivere ciò che dirò a voce, in italiano.
-Scrivi un DISCORSO ORALE in prosa, come se stessi parlando davanti ai partecipanti: frasi complete e fluide, collegate tra loro, con un tono naturale e chiaro, adatto a una lezione tecnica ma accessibile (sono corsi di formazione per persone che non lavorano direttamente nell'ambito).
+Scrivi un DISCORSO ORALE in prosa, come se stessi parlando davanti ai partecipanti: frasi complete e fluide, collegate tra loro, con un tono naturale e chiaro, adatto a una lezione accessibile (sono corsi di formazione per persone che non lavorano direttamente nell'ambito) senza risultare noioso.
 Spiega e collega i concetti della slide invece di elencarli: non riprodurre la slide punto per punto, non fare elenchi puntati o numerati, non usare tabelle. Se la slide contiene un elenco, trasformalo in un ragionamento parlato (es. "innanzitutto... poi... infine...").
 Usa paragrafi brevi separati da una riga vuota, così il testo si legge facilmente mentre parlo.
 Formattazione consentita: solo il grassetto (**parola**) per le poche parole chiave su cui voglio mettere enfasi. Niente titoli, niente heading (#), niente separatori (---), niente elenchi.
