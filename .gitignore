@@ -2,3 +2,6 @@
 .venv
 .idea
 *.md
+__pycache__
+*.egg-info
+.DS_Store

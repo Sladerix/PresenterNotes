@@ -4,13 +4,13 @@ SlidesPresenterNotes è uno script Python che estrae il testo dalle pagine di un
 
 ## Panoramica
 - Estrae il testo da ogni pagina del PDF (usa pypdf).
-- Invia il testo estratto a un modello generativo via `call_llm` in `main.py` (LiteLLM).
+- Invia il testo estratto a un modello generativo via `call_llm` in `presenternotes.py` (LiteLLM).
 - Produce un file di output in formato Markdown (.md).
 - Gestisce pagine vuote ritornando `[NESSUN TESTO RILEVATO]`.
 
 ## Requisiti
 - Python 3.8 o superiore
-- Dipendenze (vedi `requirements.txt`). Al minimo lo script usa:
+- Dipendenze (vedi `pyproject.toml`). Al minimo lo script usa:
   - pypdf
   - tqdm
   - litellm
@@ -32,7 +32,7 @@ source .venv/bin/activate
 3. Installa le dipendenze:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Configurazione
@@ -43,6 +43,7 @@ export GROQ_API_KEY=...        # groq/meta-llama/llama-4-scout-17b-16e-instruct 
 export GEMINI_API_KEY=...      # gemini/gemini-2.0-flash
 export ANTHROPIC_API_KEY=...   # anthropic/claude-sonnet-4-5
 export OPENAI_API_KEY=...      # openai/gpt-4o
+export OPENROUTER_API_KEY=...  # openrouter/<id modello OpenRouter>, es. openrouter/google/gemini-2.0-flash-001
 ```
 
 Il modello deve supportare input immagine, altrimenti le immagini delle slide vanno rimosse.
@@ -51,7 +52,7 @@ Il modello deve supportare input immagine, altrimenti le immagini delle slide va
 Scrivere l'output su file Markdown (.md):
 
 ```bash
-python main.py --pdf /percorso/alle/slide.pdf --out notes.md
+presenternotes --pdf /percorso/alle/slide.pdf --out notes.md
 ```
 
 Se ometti `--out`, l'output in Markdown verrà stampato su stdout.

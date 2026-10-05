@@ -6,6 +6,7 @@ import logging
 import re
 import sys
 from collections import Counter
+from importlib.metadata import version
 from time import sleep
 from typing import Dict, List
 
@@ -67,7 +68,7 @@ def parse_page_selection(selection: str | None, num_pages: int) -> List[int]:
     return sorted(pages)
 
 
-def extract_content_from_pdf(path: str, page_selection: str | None = None, with_images: bool = True, max_images: int | None = None) -> Dict[int, list]:
+def extract_content_from_pdf(path: str, page_selection: str | None = None, with_images: bool = True, max_images: int | None = None, include_covers: bool = False) -> Dict[int, list]:
     """Restituisce {numero_pagina (1-based): [testo, immagine PIL, ...]} per le pagine selezionate.
     Nessun OCR: un PDF di sole immagini arriva al modello come immagini.
     """
@@ -75,6 +76,8 @@ def extract_content_from_pdf(path: str, page_selection: str | None = None, with_
 
     reader = PdfReader(path)
     selected = parse_page_selection(page_selection, len(reader.pages))
+    if not page_selection and not include_covers:  # una --pages esplicita vince
+        selected = [n for n in selected if n not in (1, len(reader.pages))]
 
     pdf_content: Dict[int, list] = {}
     digests: Dict[int, list] = {}  # pagina -> hash immagini, per scartare quelle ripetute
@@ -180,17 +183,20 @@ def main() -> None:
     parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
     parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
     parser.add_argument('--model', '-m', default=DEFAULT_MODEL,
-                        help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5 (default: {DEFAULT_MODEL})')
+                        help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5, openrouter/google/gemini-2.0-flash-001 (default: {DEFAULT_MODEL})')
     parser.add_argument('--pages', '-P', help='Pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.')
+    parser.add_argument('--include-covers', action='store_true', help='Invia al modello anche la prima e l\'ultima pagina (copertine, escluse di default; ignorato se usi --pages)')
     parser.add_argument('--no-images', action='store_true', help='Non inviare le immagini al modello (molto meno token)')
     parser.add_argument('--max-images', type=int, metavar='N', help='Massimo N immagini per slide (le più grandi), per modelli con limiti es. Groq free = 3')
+    VERSION = version('presenternotes')  # letta da pyproject.toml
+    parser.add_argument('--version', action='version', version=f'presenternotes {VERSION}')
     args = parser.parse_args()
 
     system = RAG + rag_level[args.detail_level]
-    print(f"Modello: {args.model} | livello di dettaglio: {args.detail_level}", file=sys.stderr)
+    print(f"presenternotes {VERSION} | Modello: {args.model} | livello di dettaglio: {args.detail_level}", file=sys.stderr)
 
     try:
-        pages = extract_content_from_pdf(args.pdf, page_selection=args.pages, with_images=not args.no_images, max_images=args.max_images)
+        pages = extract_content_from_pdf(args.pdf, page_selection=args.pages, with_images=not args.no_images, max_images=args.max_images, include_covers=args.include_covers)
     except Exception as e:
         logging.error(f"Errore durante l'estrazione del PDF: {e}")
         sys.exit(2)
