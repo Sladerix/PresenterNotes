@@ -1,19 +1,19 @@
 # SlidesPresenterNotes
 
-SlidesPresenterNotes è uno script Python che estrae il testo dalle pagine di un PDF di slide e genera delle note presentatore (in italiano) per ciascuna slide sfruttando un modello di generazione testuale (es. Gemini tramite `google.genai`). Lo scopo è produrre testi discorsivi pronti da incollare nelle note presentatore di Apple Keynote.
+SlidesPresenterNotes è uno script Python che estrae il testo dalle pagine di un PDF di slide e genera delle note presentatore (in italiano) per ciascuna slide sfruttando un LLM a scelta (Groq, Gemini, Claude, OpenAI, ... tramite LiteLLM). Lo scopo è produrre testi discorsivi pronti da incollare nelle note presentatore di Apple Keynote.
 
 ## Panoramica
-- Estrae il testo da ogni pagina del PDF (usa PyPDF2).
-- Invia il testo estratto a un modello generativo via funzione `call_gemini` in `main.py`.
+- Estrae il testo da ogni pagina del PDF (usa pypdf).
+- Invia il testo estratto a un modello generativo via `call_llm` in `presenternotes.py` (LiteLLM).
 - Produce un file di output in formato Markdown (.md).
 - Gestisce pagine vuote ritornando `[NESSUN TESTO RILEVATO]`.
 
 ## Requisiti
 - Python 3.8 o superiore
-- Dipendenze (vedi `requirements.txt`). Al minimo lo script usa:
-  - PyPDF2
+- Dipendenze (vedi `pyproject.toml`). Al minimo lo script usa:
+  - pypdf
   - tqdm
-  - google-genai (o l'SDK che usi per Gemini)
+  - litellm
 
 ## Installazione
 1. Apri la cartella del progetto:
@@ -32,40 +32,45 @@ source .venv/bin/activate
 3. Installa le dipendenze:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
-
-> Nota: se `requirements.txt` non contiene `google-genai`, aggiungilo o installa il client SDK che usi per il modello.
 
 ## Configurazione
-Lo script utilizza la variabile `GEMINI_API_KEY` definita in `main.py`. Per evitare di inserire la chiave nel codice, è consigliabile leggere la chiave da una variabile d'ambiente. Puoi aggiungere all'inizio di `main.py`:
-
-```python
-import os
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-```
-
-E impostare la variabile d'ambiente nel terminale (macOS / zsh):
-
-> Generare la tua chiave API su [Google AI Studio](https://aistudio.google.com/app/projects)
+Scegli il modello con `--model provider/modello` ([elenco provider](https://docs.litellm.ai/docs/providers)) ed esporta la chiave del provider:
 
 ```bash
-export GEMINI_API_KEY="la_tua_chiave_gemini"
+export GROQ_API_KEY=...        # groq/qwen/qwen3.8-27b (default)
+export GEMINI_API_KEY=...      # gemini/gemini-2.0-flash
+export ANTHROPIC_API_KEY=...   # anthropic/claude-sonnet-4-5
+export OPENAI_API_KEY=...      # openai/gpt-4o
+export OPENROUTER_API_KEY=...  # openrouter/<id modello OpenRouter>, es. openrouter/google/gemini-2.0-flash-001
+export NVIDIA_NIM_API_KEY=...   # nvidia_nim/<id modello NIM>, es. nvidia_nim/meta/llama-3.2-90b-vision-instruct
 ```
+
+Il modello deve supportare input immagine, altrimenti usa `--no-images`.
+
+Esempio con Nvidia NIM (modello `moonshotai/kimi-k3`, l'ID va preso da [build.nvidia.com](https://build.nvidia.com/models)):
+
+```bash
+export NVIDIA_NIM_API_KEY=nvapi-...
+presenternotes -p slides.pdf -m nvidia_nim/moonshotai/kimi-k3 --no-images --max-tokens 4000
+```
+
+`--no-images` serve se il modello è solo testuale; `--max-tokens` alto se è un modello "reasoning" (ragiona prima di rispondere e può finire i token senza produrre testo).
 
 ## Uso
 Scrivere l'output su file Markdown (.md):
 
 ```bash
-python main.py --pdf /percorso/alle/slide.pdf --out notes.md
+presenternotes --pdf /percorso/alle/slide.pdf --out notes.md
 ```
 
-Se ometti `--out`, l'output in Markdown verrà stampato su stdout.
+Se ometti `--out`, l'output viene scritto in `./presenternotes/<nome del pdf>.md` (cartella creata nella directory da cui lanci il comando).
 
 ### Opzioni principali
 - `--pdf, -p` (obbligatorio): percorso al file PDF delle slide.
-- `--out, -o`: percorso del file di output (se omesso viene stampato su stdout). Il file prodotto sarà in formato Markdown (.md).
-- `--model`: nome del modello Gemini da usare (opzionale).
+- `--out, -o`: percorso del file di output (default: `./presenternotes/<nome del pdf>.md`). Il file prodotto sarà in formato Markdown (.md).
+- `--model, -m`: modello LiteLLM `provider/modello` (default `groq/qwen/qwen3.8-27b`).
 - `--detail-level`: livello di dettaglio per le note presentatore (0-3).
 - `--pages, -P`: pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.
 
