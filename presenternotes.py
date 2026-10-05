@@ -20,10 +20,16 @@ logging.basicConfig(level=logging.ERROR)  # warning (immagini saltate) nascosti
 # si legge dalla variabile d'ambiente del provider (GROQ_API_KEY, GEMINI_API_KEY,
 # ANTHROPIC_API_KEY, OPENAI_API_KEY, ...). Vedi https://docs.litellm.ai/docs/providers
 DEFAULT_MODEL = "groq/qwen/qwen3.8-27b"
+DEFAULT_MAX_TOKENS = 1000
 EMPTY_SLIDE = "[NESSUN TESTO RILEVATO]"
 SHORT_TEXT_CHARS = 250  # sotto questa soglia + immagini = slide "visiva"
 REPEATED_IMAGE_PAGES = 10  # immagine presente su >= N pagine = decorativa, scartata
 RATE_LIMIT_RETRIES = 5
+MAX_WAIT = 120  # s: un TPM si smaltisce in <= 60s; attese più lunghe = limite giornaliero
+
+
+class DailyLimit(Exception):
+    pass
 MAX_IMAGE_SIDE = 768  # px, lato lungo: meno token immagine
 
 # Le versioni precedenti del prompt (v1-v5) sono nella git history.
@@ -128,7 +134,7 @@ def pil_to_data_uri(img: Image.Image) -> str:
     return f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}"
 
 
-def call_llm(system: str, page_content: list, model: str, temperature: float = 0.6, max_tokens: int = 1000) -> str:
+def call_llm(system: str, page_content: list, model: str, temperature: float = 0.6, max_tokens: int = DEFAULT_MAX_TOKENS) -> str:
     """Una chiamata LiteLLM per slide. Solleva eccezione su errore (il chiamante decide)."""
     import litellm
     from litellm import RateLimitError, completion
@@ -160,12 +166,17 @@ def call_llm(system: str, page_content: list, model: str, temperature: float = 0
                 raise
             # i provider dicono quanto aspettare: "Please try again in 4.875s" / "1m2.5s"
             m = re.search(r"try again in (?:(\d+)m)?([\d.]+)s", str(e))
-            wait = (int(m.group(1) or 0) * 60 + float(m.group(2)) + 1) if m else 15
+            wait = (int(m.group(1) or 0) * 60 + float(m.group(2)) + 1) if m else min(15 * 2 ** attempt, 120)  # senza indicazioni: backoff 15s, 30s, 60s...
+            if wait > MAX_WAIT:
+                raise DailyLimit(f"il provider chiede di attendere {wait / 60:.0f} minuti: limite giornaliero esaurito (cambia modello/provider o riprova più tardi)") from e
             tqdm.write(f"Rate limit: attendo {wait:.0f}s e riprovo ({attempt + 1}/{RATE_LIMIT_RETRIES})")
             sleep(wait)
-    content = response.choices[0].message.content
+    choice = response.choices[0]
+    content = choice.message.content
     if not content:
-        raise RuntimeError("risposta vuota dal modello")
+        if choice.finish_reason == "length":  # reasoning model: i token sono finiti nel "ragionamento"
+            raise RuntimeError(f"risposta vuota: il modello ha esaurito max_tokens ({max_tokens}) ragionando; riprova con --max-tokens più alto (es. 4000)")
+        raise RuntimeError(f"risposta vuota dal modello (finish_reason={choice.finish_reason})")
     return content.strip()
 
 
@@ -185,6 +196,7 @@ def main() -> None:
                         help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5, openrouter/google/gemini-2.0-flash-001 (default: {DEFAULT_MODEL})')
     parser.add_argument('--pages', '-P', help='Pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.')
     parser.add_argument('--include-covers', action='store_true', help='Invia al modello anche la prima e l\'ultima pagina (copertine, escluse di default; ignorato se usi --pages)')
+    parser.add_argument('--max-tokens', type=int, default=DEFAULT_MAX_TOKENS, help=f'Token massimi di output per slide (default {DEFAULT_MAX_TOKENS}); alzalo per i modelli "reasoning" che ragionano prima di rispondere')
     parser.add_argument('--no-images', action='store_true', help='Non inviare le immagini al modello (molto meno token)')
     parser.add_argument('--max-images', type=int, metavar='N', help='Massimo N immagini per slide (le più grandi), per modelli con limiti es. Groq free = 3')
     VERSION = version('presenternotes')  # letta da pyproject.toml
@@ -206,7 +218,10 @@ def main() -> None:
             responses[page_number] = EMPTY_SLIDE
             continue
         try:
-            responses[page_number] = call_llm(system, page_content, args.model)
+            responses[page_number] = call_llm(system, page_content, args.model, max_tokens=args.max_tokens)
+        except DailyLimit as e:
+            logging.error(f"Slide {page_number}: {e}. Interrompo, salvo le slide già fatte.")
+            break
         except Exception as e:
             logging.error(f"Slide {page_number}: {e}")
             responses[page_number] = f"[ERROR] {e}"
