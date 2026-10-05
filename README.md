@@ -55,11 +55,11 @@ Scrivere l'output su file Markdown (.md):
 presenternotes --pdf /percorso/alle/slide.pdf --out notes.md
 ```
 
-Se ometti `--out`, l'output in Markdown verrà stampato su stdout.
+Se ometti `--out`, l'output viene scritto in `./presenternotes/<nome del pdf>.md` (cartella creata nella directory da cui lanci il comando).
 
 ### Opzioni principali
 - `--pdf, -p` (obbligatorio): percorso al file PDF delle slide.
-- `--out, -o`: percorso del file di output (se omesso viene stampato su stdout). Il file prodotto sarà in formato Markdown (.md).
+- `--out, -o`: percorso del file di output (default: `./presenternotes/<nome del pdf>.md`). Il file prodotto sarà in formato Markdown (.md).
 - `--model, -m`: modello LiteLLM `provider/modello` (default Groq Llama 4 Scout).
 - `--detail-level`: livello di dettaglio per le note presentatore (0-3).
 - `--pages, -P`: pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.

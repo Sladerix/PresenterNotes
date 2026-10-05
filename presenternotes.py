@@ -7,6 +7,7 @@ import re
 import sys
 from collections import Counter
 from importlib.metadata import version
+from pathlib import Path
 from time import sleep
 from typing import Dict, List
 
@@ -168,19 +169,17 @@ def call_llm(system: str, page_content: list, model: str, temperature: float = 0
     return content.strip()
 
 
-def write_output(responses: Dict[int, str], out_path: str | None = None) -> None:
+def write_output(responses: Dict[int, str], out_path: Path) -> None:
     md = "".join(f"# Slide {idx}\n\n{responses[idx]}\n\n---\n\n" for idx in sorted(responses))
-    if out_path:
-        with open(out_path, 'w', encoding='utf-8') as f:
-            f.write(md)
-    else:
-        print(md)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(md, encoding='utf-8')
+    print(f"Scritto {out_path}", file=sys.stderr)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description='Genera note presentatore in italiano da un PDF di slide usando un LLM a scelta.')
     parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
-    parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
+    parser.add_argument('--out', '-o', help='File di output (default: ./presenternotes/<nome del pdf>.md)')
     parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
     parser.add_argument('--model', '-m', default=DEFAULT_MODEL,
                         help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5, openrouter/google/gemini-2.0-flash-001 (default: {DEFAULT_MODEL})')
@@ -212,7 +211,8 @@ def main() -> None:
             logging.error(f"Slide {page_number}: {e}")
             responses[page_number] = f"[ERROR] {e}"
 
-    write_output(responses, out_path=args.out)
+    out_path = Path(args.out) if args.out else Path.cwd() / 'presenternotes' / f'{Path(args.pdf).stem}.md'
+    write_output(responses, out_path)
 
 
 if __name__ == '__main__':
