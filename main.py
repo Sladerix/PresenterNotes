@@ -1,95 +1,23 @@
 import argparse
 import base64
 import io
-import sys
 import logging
-from datetime import datetime
-from time import sleep
-from typing import List, Dict, cast
-from tqdm import tqdm
+import sys
+from typing import Dict, List
+
 from PIL import Image
-import os
-from groq import Groq
+from tqdm import tqdm
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.ERROR)  # warning (immagini saltate) nascosti
 
-parser = argparse.ArgumentParser(description='Estrai testo da un PDF per slide e invia ogni slide a Gemini (Google genai).')
-parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
-parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
-parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
-parser.add_argument('--model', help='Nome del modello AI da usare (opzionale)', default=None)
-parser.add_argument('--pages', '-P', help='Pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.', default=None)
-args = parser.parse_args()
+# Qualsiasi modello supportato da LiteLLM, formato "provider/modello". La chiave API
+# si legge dalla variabile d'ambiente del provider (GROQ_API_KEY, GEMINI_API_KEY,
+# ANTHROPIC_API_KEY, OPENAI_API_KEY, ...). Vedi https://docs.litellm.ai/docs/providers
+DEFAULT_MODEL = "groq/meta-llama/llama-4-scout-17b-16e-instruct"
+EMPTY_SLIDE = "[NESSUN TESTO RILEVATO]"
 
-GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
-
-
-# ELENCO DI VARIE VERSIONI DEL RAG USATE IN TESTING
-rag_v1 = """
-Sono un professore e devo tenere un corso di otto ore sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, però per una sicurezza maggiore nel discorso (siccome il corso sarà in italiano) vorrei avere tutte le note presentatore scritte in italiano per ogni slide in modo da fare un discorso abbastanza esteso per ognuna ed essere sicuro di non finire mai il materiale che ho a disposizione.
-Generarmi le note presentatore da inserire su Apple Keynote come se fosse un discorso orale, piuttosto che scritto.
-In output NON aggiungere altre frasi se non quelle del discorso in modo tale che io possa copiarle ed incollarle direttamente nelle note presentatore.
-Se una slide è vuota o non ha testo, rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
-Non usare formattazione particolare per il testo perchè le note presentatore di Apple Keynote non le supportano, piuttosto usa una formattazione basata su spazi, invii e tab per ottmizzare la leggibilità.
-Se pensi che utile aggiungere ulteriori dettagli fallo pure.
-l'output deve essere un testo discorsivo orale sulla slide che ti ho passato, senza aggiungere altro (nemmeno buongiorno, arrivederci o simili), nemmeno il riassunto finale.
-Non è necessario che tu faccia riferimento al fatto che stai generando delle note presentatore, semplicemente genera il discorso orale da fare per la slide.
-Assolutamente non devi inserire frasi di circostanza o simili, nessun "buongiorno", "arrivederci" ecc..
-"""
-
-rag_v2 = """
-Sono un professore, devo tenere un corso di otto ore, sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per Apple Keynote per ogni slide in italiano.
-Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di costi di formazione per persone che non sono direttamente nell'ambito in questione).
-Non usare formattazione particolare per il testo, perché le note presentatori di Apple Keynote non le supportano, piuttosto usa una formattazione basata su spazi, invii e TAB, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
-L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
-Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
-Se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, fallo pure, più contenuto c'è meglio è.
-Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
-Non devi fare riferimento al fatto che stai generando delle note presentatore.
-Non fare il riassunto finale della slide.
-"""
-
-rag_v3 = """
-Sono un professore, devo tenere un corso di otto ore, sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per Apple Keynote per ogni slide in italiano.
-Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di costi di formazione per persone che non sono direttamente nell'ambito in questione).
-Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
-L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
-Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
-Se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, fallo pure, più contenuto c'è meglio è.
-Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
-Non devi fare riferimento al fatto che stai generando delle note presentatore.
-Non fare il riassunto finale della slide.
-"""
-
-rag_v4 = """
-Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano.
-Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di cosri di formazione per persone che non sono direttamente nell'ambito in questione).
-Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide.
-L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
-Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
-Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Mi raccomando, non esagerare.
-Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
-Non devi fare riferimento al fatto che stai generando delle note presentatore.
-Non fare il riassunto finale della slide.
-"""
-
-rag_v5 = """
-Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
-Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano.
-Le note presentatore devono ricalcare il contenuto di ogni slide, sottoforma di discorso orale adatto ad una lezione tecnica ma non troppo (si tratta di cosri di formazione per persone che non sono direttamente nell'ambito in questione).
-Le note presentatore in output devono essere scritte in Markdown (.md) sfruttando titolo, sottotitoli e elenchi, in modo da ottimizzare la leggibilità (PER ME) nel momento in cui andrò a presentare le slide. Ogni slide deve essere separata dalle altre da un titolo iniziale (esempio: #Slide 1) e da un separatore orizzontale (---) alla sua fine.
-L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
-Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
-Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili, non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slide.
-Non devi fare riferimento al fatto che stai generando delle note presentatore.
-Non fare il riassunto finale della slide.\n
-"""
-
-rag_v6 = """
+# Le versioni precedenti del prompt (v1-v5) sono nella git history.
+RAG = """
 Sono un professore, devo tenere un corso, sfruttando determinati pacchi di slide che ho già.
 Le slide sono scritte in inglese, ma per questioni di sicurezza nel discorso orale ho bisogno di generare le note presentatore per ogni slide in italiano in un file markdown (.md).
 Se ci sono termini tecnici in inglese che non hanno una traduzione italiana comune, mantienili in inglese.
@@ -103,7 +31,8 @@ Non inserire MAI separatori markdown orizzontali (---).
 L'output della generazione deve contenere solamente il testo che ti ho chiesto, senza ulteriori frasi, in modo tale che io possa accoppiare il contenuto dell'output direttamente nelle note presentatore senza avere rumore.
 Evita parole discorsive o di cortesia come "iniziamo, "buongiorno", "buonasera", "arriverderci", o simili. Non devi preparare l'intero discorso, ma solamente quello legato al contenuto delle slides.
 Non devi fare riferimento al fatto che stai generando delle note presentatore.
-Non fare il riassunto finale della slide.\n
+Non fare il riassunto finale della slide.
+Se una slide è vuota o non ha contenuto rispondi semplicemente con "[NESSUN TESTO RILEVATO]".
 """
 
 rag_level = [
@@ -111,227 +40,137 @@ rag_level = [
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto ma con moderazione, può anche darsi che alcune cose le spieghi nelle slide successive. Se vedi slide con poco testo, allora in quel caso si estensivo senza esagerare.",
     "Solo se pensi che sia utile aggiungere ulteriori informazioni di dettaglio sull'argomento della slide, aggiungi pure del contenuto, potrebbe essere utile avere maggiori informazioni per la spiegazione.",
     "Più contenuto c'è meglio è, quindi sentiti libero di espandere il discorso ove necessario.",
-    ]
+]
 
 
-
-
-
-RAG_DETAIL_LEVEL = args.detail_level or 0
-RAG = rag_v6 + rag_level[RAG_DETAIL_LEVEL]
-print(f"Using RAG detail level: {RAG_DETAIL_LEVEL}.")
-
-# first element is the minute, second element is the request made in that minute
-max_rpm = 10
-request_count: List[int] = [datetime.now().minute, 0]
-
-
-def encode_image(path: str) -> str:
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-def parse_page_selection(selection: str, num_pages: int) -> List[int]:
-    """Parsa una stringa di selezione pagine come "1,3-5" in una lista ordinata di numeri 1-based.
-    Solleva ValueError su input non valido o range fuori limiti.
-    """
+def parse_page_selection(selection: str | None, num_pages: int) -> List[int]:
+    """Parsa "1,3-5" in una lista ordinata di numeri 1-based. ValueError se non valido."""
     if not selection:
         return list(range(1, num_pages + 1))
 
     pages = set()
-    parts = [p.strip() for p in selection.split(',') if p.strip()]
-    for part in parts:
-        if '-' in part:
-            start_str, end_str = part.split('-', 1)
-            try:
-                start = int(start_str)
-                end = int(end_str)
-            except ValueError:
-                raise ValueError(f"Intervallo pagina non valido: '{part}'")
-            if start < 1 or end < start or end > num_pages:
-                raise ValueError(f"Intervallo pagina fuori dai limiti: '{part}' (numero pagine: {num_pages})")
-            for n in range(start, end + 1):
-                pages.add(n)
-        else:
-            try:
-                n = int(part)
-            except ValueError:
-                raise ValueError(f"Numero di pagina non valido: '{part}'")
-            if n < 1 or n > num_pages:
-                raise ValueError(f"Numero di pagina fuori dai limiti: {n} (numero pagine: {num_pages})")
-            pages.add(n)
+    for part in (p.strip() for p in selection.split(',') if p.strip()):
+        try:
+            start, _, end = part.partition('-')
+            lo, hi = int(start), int(end or start)
+        except ValueError:
+            raise ValueError(f"Pagina o intervallo non valido: '{part}'")
+        if lo < 1 or hi < lo or hi > num_pages:
+            raise ValueError(f"Pagina o intervallo fuori dai limiti: '{part}' (numero pagine: {num_pages})")
+        pages.update(range(lo, hi + 1))
 
     return sorted(pages)
 
-def extract_content_from_pdf(path: str, page_selection: str | None = None) -> list:
-    """Estrae il testo da ogni pagina selezionata del PDF. Restituisce una lista di page_content in ordine di pagina.
-    page_selection può essere una stringa come "1,3-5" (1-based). Se None -> tutte le pagine.
-    Usa PyPDF2; se il PDF contiene solo immagini e vuoi OCR, il codice dovrà essere esteso con pdf2image+pytesseract (commento nel README).
-    """
-    pdf_content = []
 
-    try:
-        from PyPDF2 import PdfReader
-    except Exception as e:
-        raise RuntimeError("PyPDF2 è richiesto per l'estrazione del testo. Installa con: pip install PyPDF2") from e
+def extract_content_from_pdf(path: str, page_selection: str | None = None) -> Dict[int, list]:
+    """Restituisce {numero_pagina (1-based): [testo, immagine PIL, ...]} per le pagine selezionate.
+    Nessun OCR: un PDF di sole immagini arriva al modello come immagini.
+    """
+    from PyPDF2 import PdfReader
 
     reader = PdfReader(path)
-    num_pages = len(reader.pages)
+    selected = parse_page_selection(page_selection, len(reader.pages))
 
-    try:
-        selected_pages = parse_page_selection(page_selection, num_pages)
-    except ValueError as e:
-        raise RuntimeError(f"Selezione pagine non valida: {e}") from e
-
-    for page_number in selected_pages:
-        # page_number è 1-based
+    pdf_content: Dict[int, list] = {}
+    for page_number in selected:
         page = reader.pages[page_number - 1]
-        page_content = []
 
         try:
             text = page.extract_text() or ""
         except Exception as e:
             text = ""
-            logging.error(e)
+            logging.error(f"Pagina {page_number}: estrazione testo fallita: {e}")
 
+        images = []
         try:
-            pil_images = []
-
-            # Itera sulle immagini nella pagina (se presenti)
-            for img in getattr(page, 'images', []):
-                data = img.data
-                pil_img = Image.open(io.BytesIO(data))
-                pil_images.append(pil_img)
-
+            n_images = len(page.images)
         except Exception as e:
-            pil_images = []
-            logging.info(e)
+            n_images = 0
+            logging.warning(f"Pagina {page_number}: lista immagini fallita: {e}")
+        for i in range(n_images):
+            # una per una: PyPDF2 non sa decodificare alcuni modi (es. PA), si salta solo quell'immagine
+            try:
+                images.append(Image.open(io.BytesIO(page.images[i].data)))
+            except Exception as e:
+                logging.warning(f"Pagina {page_number}: immagine {i} saltata: {e}")
 
-        page_content.append(text)
-        page_content.extend(pil_images)
-
-        pdf_content.append(page_content)
+        pdf_content[page_number] = [text, *images]
 
     return pdf_content
 
-def call_groq(rag, page_content: list, model: str = "meta-llama/llama-4-scout-17b-16e-instruct", temperature: float = 0.6, max_tokens: int = 800) -> str | None:
-    try:
-        text_parts = [item for item in page_content if isinstance(item, str) and item.strip()]
-        page_images = [item for item in page_content if hasattr(item, 'save')]
-        page_text = "\n\n".join(text_parts) or "[NESSUN TESTO RILEVATO]"
 
-        def pil_to_data_uri(img) -> str:
-            buf = io.BytesIO()
-            img.save(buf, format="PNG")
-            b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-            # TODO se l'immagine contiene tutti pixel uguali allora ignorarla
-            return f"data:image/png;base64,{b64}"
+def pil_to_data_uri(img: Image.Image) -> str:
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, format="PNG")  # RGB: PNG non salva CMYK
+    return f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}"
 
-        # Contenuto da inviare come user payload
-        user_content = [{"type": "text", "text": page_text}]
-        for img in page_images:
-            try:
-                user_content.append({
-                    "type": "image_url",
-                    "image_url": {"url": pil_to_data_uri(img)},
-                })
-            except Exception:
-                logging.info("Ignorata immagine non serializzabile")
 
-        # Istruzioni esplicite per ottenere un discorso orale esteso
-        style_instructions = (
-            "Genera un discorso orale in italiano basato esclusivamente sul contenuto della slide.\n"
-            "- Espandi il contenuto in modo discorsivo e naturale, come se spiegassi la slide a una classe.\n"
-            "- NON inserire formule di cortesia (es. buongiorno, arrivederci) né riassunti finali.\n"
-            "- Se la slide è vuota rispondi con esattamente: [NESSUN TESTO RILEVATO].\n"
-            "- Se ci sono termini tecnici mantienili in inglese se necessario.\n"
-            "- Fornisci un testo facilmente incollabile nelle note presentatore, senza header aggiuntivi.\n"
-        )
+def call_llm(system: str, page_content: list, model: str, temperature: float = 0.6, max_tokens: int = 800) -> str:
+    """Una chiamata LiteLLM per slide. Solleva eccezione su errore (il chiamante decide)."""
+    from litellm import completion
 
-        # (Facoltativo) piccolo esempio nello stile desiderato: aiuta il modello a imitare il formato
-        example_user = [{"type": "text", "text": "Slide: Machine learning basics\n- Supervised learning\n- Unsupervised learning"}]
-        example_assistant = "La machine learning comprende due grandi famiglie: supervised learning, dove si ha un dataset etichettato..."  # breve esempio esemplificativo
+    text = page_content[0].strip() or EMPTY_SLIDE
+    user_content = [{"type": "text", "text": text}]
+    for img in page_content[1:]:
+        try:
+            user_content.append({"type": "image_url", "image_url": {"url": pil_to_data_uri(img)}})
+        except Exception as e:
+            logging.error(f"Immagine ignorata: {e}")
 
-        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+    response = completion(
+        model=model,
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user_content}],
+        temperature=temperature,
+        max_tokens=max_tokens,
+        num_retries=3,  # gestisce rate limit / errori transitori
+    )
+    content = response.choices[0].message.content
+    if not content:
+        raise RuntimeError("risposta vuota dal modello")
+    return content.strip()
 
-        messages = [
-            {"role": "system", "content": rag},
-            {"role": "user", "content": style_instructions},
-            {"role": "user", "content": user_content},
-            # fornisco un esempio reale breve per guidare lo stile (se il provider lo supporta)
-            #{"role": "user", "content": example_user},
-            #{"role": "assistant", "content": example_assistant},
-        ]
 
-        chat_completion = client.chat.completions.create(
-            model=model,
-            messages=cast(list, messages),
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-
-        response = chat_completion.choices[0].message.content
-        return response.strip() if response else None
-
-    except Exception as e:
-        logging.error(f"Generazione Groq fallita: {e}")
-        return None
-
-def write_output(responses: Dict[int, str], out_path: str = None) -> None:
-    """Scrive le risposte in formato Markdown (default) o JSON.
-    Per Markdown crea una separazione leggibile per slide usando intestazioni e linee orizzontali.
-    """
+def write_output(responses: Dict[int, str], out_path: str | None = None) -> None:
+    md = "".join(f"# Slide {idx}\n\n{responses[idx]}\n\n---\n\n" for idx in sorted(responses))
     if out_path:
         with open(out_path, 'w', encoding='utf-8') as f:
-            for idx in sorted(responses.keys()):
-                response = responses[idx] or ""
-                f.write(f"# Slide {idx}\n\n")
-                f.write(response)
-                f.write("\n\n---\n\n")
-
-        logging.info(f"Output written to {out_path}")
-
+            f.write(md)
     else:
-        for idx in sorted(responses.keys()):
-            print(f"# Slide {idx}\n")
-            print(responses[idx] or "")
-            print("\n---\n")
+        print(md)
 
 
-if __name__ == '__main__':
-    try: 
+def main() -> None:
+    parser = argparse.ArgumentParser(description='Genera note presentatore in italiano da un PDF di slide usando un LLM a scelta.')
+    parser.add_argument('--pdf', '-p', required=True, help='Percorso al file PDF delle slide')
+    parser.add_argument('--out', '-o', help='File di output (se omesso stampa su stdout)')
+    parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
+    parser.add_argument('--model', '-m', default=DEFAULT_MODEL,
+                        help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5 (default: {DEFAULT_MODEL})')
+    parser.add_argument('--pages', '-P', help='Pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.')
+    args = parser.parse_args()
+
+    system = RAG + rag_level[args.detail_level]
+    print(f"Modello: {args.model} | livello di dettaglio: {args.detail_level}", file=sys.stderr)
+
+    try:
         pages = extract_content_from_pdf(args.pdf, page_selection=args.pages)
     except Exception as e:
         logging.error(f"Errore durante l'estrazione del PDF: {e}")
         sys.exit(2)
 
     responses: Dict[int, str] = {}
-
-    for i, page_content in tqdm(enumerate(pages, start=1), total=len(pages), unit="slide"):
-
-        logging.info(f"Invio slide {i} a Groq...")
-
-        if  len(page_content) == 0:
-            responses[i] = "[NESSUN TESTO RILEVATO]"
+    for page_number, page_content in tqdm(pages.items(), unit="slide"):
+        if not page_content[0].strip() and len(page_content) == 1:
+            responses[page_number] = EMPTY_SLIDE
             continue
-
         try:
-            # If we have exceeded max requests per minute, wait
-            #if request_count[1] == max_rpm and request_count[0] == datetime.now().minute:
-            #    sleep(60 - datetime.now().second + 1)
-
-            # Reset count if minute has changed
-            if request_count[0] != datetime.now().minute:
-                request_count[0] = datetime.now().minute
-                request_count[1] = 0
-
-            resp_text = call_groq(RAG, page_content)
-            if resp_text is None:
-                raise RuntimeError(f"Nessuna risposta valida da Groq per la slide #{i}")
-            request_count[1] = request_count[1] + 1
-
+            responses[page_number] = call_llm(system, page_content, args.model)
         except Exception as e:
-            logging.error(f"Errore chiamando Gemini per la slide {i}: {e}")
-            resp_text = f"[ERROR] {e}"
-        responses[i] = resp_text
+            logging.error(f"Slide {page_number}: {e}")
+            responses[page_number] = f"[ERROR] {e}"
 
-    write_output(responses, out_path=args.out)  # always uses default 'md'
+    write_output(responses, out_path=args.out)
+
+
+if __name__ == '__main__':
+    main()

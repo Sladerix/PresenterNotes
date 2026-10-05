@@ -1,11 +1,5 @@
-# Core dependencies
 PyPDF2
-# Google GenAI SDK (name may vary). Install the official package you use, for example:
-google-genai
-
-# Optional: OCR fallback (requires system-level tesseract)
-pdf2image
+litellm
+tenacity
 pillow
-pytesseract
 tqdm
-
