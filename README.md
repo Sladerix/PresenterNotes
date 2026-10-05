@@ -39,14 +39,24 @@ pip install -e .
 Scegli il modello con `--model provider/modello` ([elenco provider](https://docs.litellm.ai/docs/providers)) ed esporta la chiave del provider:
 
 ```bash
-export GROQ_API_KEY=...        # groq/meta-llama/llama-4-scout-17b-16e-instruct (default)
+export GROQ_API_KEY=...        # groq/qwen/qwen3.8-27b (default)
 export GEMINI_API_KEY=...      # gemini/gemini-2.0-flash
 export ANTHROPIC_API_KEY=...   # anthropic/claude-sonnet-4-5
 export OPENAI_API_KEY=...      # openai/gpt-4o
 export OPENROUTER_API_KEY=...  # openrouter/<id modello OpenRouter>, es. openrouter/google/gemini-2.0-flash-001
+export NVIDIA_NIM_API_KEY=...   # nvidia_nim/<id modello NIM>, es. nvidia_nim/meta/llama-3.2-90b-vision-instruct
 ```
 
-Il modello deve supportare input immagine, altrimenti le immagini delle slide vanno rimosse.
+Il modello deve supportare input immagine, altrimenti usa `--no-images`.
+
+Esempio con Nvidia NIM (modello `moonshotai/kimi-k3`, l'ID va preso da [build.nvidia.com](https://build.nvidia.com/models)):
+
+```bash
+export NVIDIA_NIM_API_KEY=nvapi-...
+presenternotes -p slides.pdf -m nvidia_nim/moonshotai/kimi-k3 --no-images --max-tokens 4000
+```
+
+`--no-images` serve se il modello è solo testuale; `--max-tokens` alto se è un modello "reasoning" (ragiona prima di rispondere e può finire i token senza produrre testo).
 
 ## Uso
 Scrivere l'output su file Markdown (.md):
@@ -60,7 +70,7 @@ Se ometti `--out`, l'output viene scritto in `./presenternotes/<nome del pdf>.md
 ### Opzioni principali
 - `--pdf, -p` (obbligatorio): percorso al file PDF delle slide.
 - `--out, -o`: percorso del file di output (default: `./presenternotes/<nome del pdf>.md`). Il file prodotto sarà in formato Markdown (.md).
-- `--model, -m`: modello LiteLLM `provider/modello` (default Groq Llama 4 Scout).
+- `--model, -m`: modello LiteLLM `provider/modello` (default `groq/qwen/qwen3.8-27b`).
 - `--detail-level`: livello di dettaglio per le note presentatore (0-3).
 - `--pages, -P`: pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.
 

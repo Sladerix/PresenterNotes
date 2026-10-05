@@ -18,7 +18,8 @@ logging.basicConfig(level=logging.ERROR)  # warning (immagini saltate) nascosti
 
 # Qualsiasi modello supportato da LiteLLM, formato "provider/modello". La chiave API
 # si legge dalla variabile d'ambiente del provider (GROQ_API_KEY, GEMINI_API_KEY,
-# ANTHROPIC_API_KEY, OPENAI_API_KEY, ...). Vedi https://docs.litellm.ai/docs/providers
+# ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, NVIDIA_NIM_API_KEY, ...).
+# Vedi https://docs.litellm.ai/docs/providers
 DEFAULT_MODEL = "groq/qwen/qwen3.8-27b"
 DEFAULT_MAX_TOKENS = 1000
 EMPTY_SLIDE = "[NESSUN TESTO RILEVATO]"
@@ -104,7 +105,7 @@ def extract_content_from_pdf(path: str, page_selection: str | None = None, with_
             n_images = 0
             logging.warning(f"Pagina {page_number}: lista immagini fallita: {e}")
         for i in range(n_images):
-            # una per una: alcuni modi immagine possono fallire decodificare alcuni modi (es. PA), si salta solo quell'immagine
+            # una per una: la decodifica può fallire per alcuni modi immagine (es. PA): si salta solo quell'immagine
             try:
                 data = page.images[i].data
                 images.append(Image.open(io.BytesIO(data)))
@@ -134,12 +135,8 @@ def pil_to_data_uri(img: Image.Image) -> str:
     return f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}"
 
 
-def call_llm(system: str, page_content: list, model: str, temperature: float = 0.6, max_tokens: int = DEFAULT_MAX_TOKENS) -> str:
-    """Una chiamata LiteLLM per slide. Solleva eccezione su errore (il chiamante decide)."""
-    import litellm
-    from litellm import RateLimitError, completion
-    litellm.suppress_debug_info = True  # niente banner "Give Feedback" a ogni errore
-
+def build_messages(system: str, page_content: list) -> list:
+    """Messaggi esatti inviati al modello per una slide (usati sia da call_llm sia dal conteggio token)."""
     text = page_content[0].strip() or EMPTY_SLIDE
     if len(page_content) > 1 and len(text) < SHORT_TEXT_CHARS:
         text += "\n\n[NOTA: questa slide ha poco testo; l'immagine allegata è il contenuto principale: descrivila e spiegala in modo arricchito.]"
@@ -149,10 +146,19 @@ def call_llm(system: str, page_content: list, model: str, temperature: float = 0
             user_content.append({"type": "image_url", "image_url": {"url": pil_to_data_uri(img)}})
         except Exception as e:
             logging.error(f"Immagine ignorata: {e}")
+    return [{"role": "system", "content": system}, {"role": "user", "content": user_content}]
+
+
+def call_llm(system: str, page_content: list, model: str, temperature: float = 0.6, max_tokens: int = DEFAULT_MAX_TOKENS) -> str:
+    """Una chiamata LiteLLM per slide. Solleva eccezione su errore (il chiamante decide)."""
+    import litellm
+    from litellm import RateLimitError, completion
+    litellm.suppress_debug_info = True  # niente banner "Give Feedback" a ogni errore
+    litellm.drop_params = True  # scarta i parametri che il modello non supporta (es. temperature nei modelli reasoning OpenAI)
 
     kwargs = dict(
         model=model,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user_content}],
+        messages=build_messages(system, page_content),
         temperature=temperature,
         max_tokens=max_tokens,
         num_retries=3,  # errori transitori; i rate limit li gestisce il ciclo sotto
@@ -176,8 +182,58 @@ def call_llm(system: str, page_content: list, model: str, temperature: float = 0
     if not content:
         if choice.finish_reason == "length":  # reasoning model: i token sono finiti nel "ragionamento"
             raise RuntimeError(f"risposta vuota: il modello ha esaurito max_tokens ({max_tokens}) ragionando; riprova con --max-tokens più alto (es. 4000)")
-        raise RuntimeError(f"risposta vuota dal modello (finish_reason={choice.finish_reason})")
+        reasoning = getattr(choice.message, "reasoning_content", None)
+        raise RuntimeError(f"risposta vuota dal modello (finish_reason={choice.finish_reason}"
+                           + (f", solo reasoning: {reasoning[:80]!r}" if reasoning else "") + ")")
     return content.strip()
+
+
+def image_tokens(img: Image.Image, model: str) -> int:
+    """Token di un'immagine come la contano i provider (regole documentate, approssimate), dopo il resize di pil_to_data_uri.
+    LiteLLM conta sempre 85 (valore OpenAI low detail) per qualsiasi provider."""
+    scale = min(1, MAX_IMAGE_SIDE / max(img.size))
+    w, h = max(1, round(img.width * scale)), max(1, round(img.height * scale))
+    if model.startswith(("gemini/", "vertex_ai/")):  # 258 token per immagine <= 384px, poi tessere da 768px
+        return 258 if max(w, h) <= 384 else 258 * -(-w // 768) * -(-h // 768)
+    if model.startswith("anthropic/"):  # ~ larghezza x altezza / 750, max ~1600
+        return min(1600, w * h // 750)
+    return 85
+
+
+def estimate_tokens(system: str, pages: Dict[int, list], model: str, max_tokens: int,
+                    price_in: float | None = None, price_out: float | None = None) -> None:
+    """Stima i token (e il costo) dell'esecuzione SENZA chiamare il modello. Prezzi in $ per 1M di token.
+    Input = conteggio LiteLLM sui messaggi reali (testo + immagini), con le immagini corrette per provider
+    (image_tokens); il tokenizer del testo di alcuni provider (es. Gemini) è comunque diverso. Output = massimo (max_tokens per slide): il reale è minore.
+    """
+    import litellm
+    litellm.suppress_debug_info = True
+
+    total_in, calls = 0, 0
+    for page_number, page_content in pages.items():
+        if not page_content[0].strip() and len(page_content) == 1:
+            continue  # slide vuota: nessuna chiamata
+        n = litellm.token_counter(model=model, messages=build_messages(system, page_content))
+        n += sum(image_tokens(img, model) - 85 for img in page_content[1:])  # LiteLLM ne ha già contati 85 a immagine
+        print(f"Slide {page_number}: {n} token in input ({len(page_content) - 1} immagini)", file=sys.stderr)
+        total_in += n
+        calls += 1
+    total_out = calls * max_tokens
+
+    if price_in is None or price_out is None:  # prezzi dal catalogo LiteLLM, se il modello è noto
+        try:
+            price_in, price_out = (c * 1e6 for c in litellm.cost_per_token(model=model, prompt_tokens=1, completion_tokens=1))
+        except Exception:
+            price_in = price_out = None
+
+    print(f"\nModello: {model} | richieste: {calls} (slide vuote escluse)", file=sys.stderr)
+    print(f"Token input:  {total_in:>9,}", file=sys.stderr)
+    print(f"Token output: {total_out:>9,} al massimo ({max_tokens} x {calls}); di solito molti meno", file=sys.stderr)
+    if price_in is None:
+        print("Costo: prezzo non noto a LiteLLM per questo modello, passa --price-in/--price-out ($ per 1M token)", file=sys.stderr)
+    else:
+        cost_in, cost_out = total_in * price_in / 1e6, total_out * price_out / 1e6
+        print(f"Costo: ${cost_in:.4f} (input) + fino a ${cost_out:.4f} (output) = fino a ${cost_in + cost_out:.4f}  [${price_in:g} / ${price_out:g} per 1M token]", file=sys.stderr)
 
 
 def write_output(responses: Dict[int, str], out_path: Path) -> None:
@@ -193,10 +249,13 @@ def main() -> None:
     parser.add_argument('--out', '-o', help='File di output (default: ./presenternotes/<nome del pdf>.md)')
     parser.add_argument('--detail-level', help='Livello di dettaglio per le note presentatore (0-3)', type=int, choices=[0, 1, 2, 3], default=0)
     parser.add_argument('--model', '-m', default=DEFAULT_MODEL,
-                        help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5, openrouter/google/gemini-2.0-flash-001 (default: {DEFAULT_MODEL})')
+                        help=f'Modello LiteLLM "provider/modello", es. gemini/gemini-2.0-flash, anthropic/claude-sonnet-4-5, openrouter/google/gemini-2.0-flash-001, nvidia_nim/moonshotai/kimi-k3 (default: {DEFAULT_MODEL})')
     parser.add_argument('--pages', '-P', help='Pagine da estrarre (1-based). Esempi: "1,3-5" o "2-10". Se omesso, usa tutte le pagine.')
     parser.add_argument('--include-covers', action='store_true', help='Invia al modello anche la prima e l\'ultima pagina (copertine, escluse di default; ignorato se usi --pages)')
     parser.add_argument('--max-tokens', type=int, default=DEFAULT_MAX_TOKENS, help=f'Token massimi di output per slide (default {DEFAULT_MAX_TOKENS}); alzalo per i modelli "reasoning" che ragionano prima di rispondere')
+    parser.add_argument('--count-tokens', action='store_true', help='Non chiama il modello: stampa i token (e il costo stimato) che verrebbero usati, poi esce')
+    parser.add_argument('--price-in', type=float, metavar='USD', help='Con --count-tokens: prezzo input in $ per 1M token (se il modello non è nel catalogo LiteLLM)')
+    parser.add_argument('--price-out', type=float, metavar='USD', help='Con --count-tokens: prezzo output in $ per 1M token')
     parser.add_argument('--no-images', action='store_true', help='Non inviare le immagini al modello (molto meno token)')
     parser.add_argument('--max-images', type=int, metavar='N', help='Massimo N immagini per slide (le più grandi), per modelli con limiti es. Groq free = 3')
     VERSION = version('presenternotes')  # letta da pyproject.toml
@@ -211,6 +270,10 @@ def main() -> None:
     except Exception as e:
         logging.error(f"Errore durante l'estrazione del PDF: {e}")
         sys.exit(2)
+
+    if args.count_tokens:
+        estimate_tokens(system, pages, args.model, args.max_tokens, args.price_in, args.price_out)
+        return
 
     responses: Dict[int, str] = {}
     for page_number, page_content in tqdm(pages.items(), unit="slide"):

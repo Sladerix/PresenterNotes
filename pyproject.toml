@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "presenternotes"
-version = "0.1.2"
+version = "0.1.7"
 description = "Genera note presentatore in italiano da un PDF di slide con un LLM a scelta"
 readme = "README.md"
 requires-python = ">=3.10"
